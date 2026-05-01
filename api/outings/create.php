@@ -69,5 +69,5 @@ try {
 
 } catch (Exception $e) {
     $pdo->rollBack();
-    jsonResponse(['error' => 'Failed to create outing'], 500);
+    jsonResponse(['error' => 'Failed to create outing: ' . $e->getMessage()], 500);
 }
