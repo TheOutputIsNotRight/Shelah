@@ -22,6 +22,15 @@ try {
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES => false
     ]);
+    
+    // Vercel + Neon PgBouncer connection pooling can sometimes return connections 
+    // that are stuck in an aborted transaction state from a previous crashed request.
+    // We send a raw ROLLBACK to the server to reset the connection state unconditionally.
+    try {
+        @$pdo->exec('ROLLBACK');
+    } catch (Exception $e) {
+        // Ignore "no transaction in progress" errors
+    }
 } catch (PDOException $e) {
     http_response_code(500);
     echo json_encode(['error' => 'Database connection failed']);

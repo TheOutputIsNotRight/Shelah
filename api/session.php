@@ -2,16 +2,7 @@
 // Database-backed sessions for Vercel serverless (stateless) environment
 require_once __DIR__ . '/db.php';
 
-// Auto-create sessions table on first use
-try {
-    $pdo->exec('CREATE TABLE IF NOT EXISTS sessions (
-        token VARCHAR(128) PRIMARY KEY,
-        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-        created_at TIMESTAMP DEFAULT NOW()
-    )');
-} catch (Exception $e) {
-    // Ignore if already exists
-}
+
 
 // Initialize $_SESSION from cookie token
 $_SESSION = [];
