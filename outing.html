@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="View outing details, set requirements, and vote on places.">
+  <title>Outing — Shelah</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<nav class="nav"><div class="container"><a href="/" class="nav-brand"><span>🎉</span> Shelah</a><div id="nav-user"></div></div></nav>
+
+<main class="container" style="padding-bottom:48px">
+  <div id="loading-state">
+    <div class="skeleton" style="height:40px;width:60%;margin:32px 0 12px"></div>
+    <div class="skeleton" style="height:20px;width:40%"></div>
+    <div class="skeleton" style="height:200px;margin-top:24px"></div>
+  </div>
+  <div id="restricted-view" style="display:none">
+    <div class="restricted-view">
+      <div class="lock">🔒</div>
+      <h2 id="restricted-name"></h2>
+      <p style="color:var(--text-secondary)">This is a private outing. You need to be invited.</p>
+      <a href="/" class="btn btn-primary" style="margin-top:20px">Back to Home</a>
+    </div>
+  </div>
+  <div id="invited-view" style="display:none"></div>
+  <div id="public-view" style="display:none"></div>
+  <div id="member-view" style="display:none"></div>
+</main>
+
+<!-- Invite Friend Modal -->
+<div class="modal-overlay" id="invite-modal">
+  <div class="modal modal-inner">
+    <h3 class="modal-title">👥 Invite a Friend</h3>
+    <div id="invite-friends-list"><div class="empty-state"><span class="icon">⏳</span><p>Loading...</p></div></div>
+    <div id="pending-approvals-section" style="margin-top:20px;display:none">
+      <h4 class="section-title">🗳️ Pending Approvals</h4>
+      <div id="pending-approvals-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Requirements Modal -->
+<div class="modal-overlay" id="req-modal">
+  <div class="modal modal-full modal-inner">
+    <h3 class="modal-title">📋 Your Requirements</h3>
+    <div style="max-width:560px;margin:0 auto">
+      <div class="section">
+        <label class="form-label">📍 Your Location (Home)</label>
+        <div class="map-container" id="req-map"></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-outline btn-sm" onclick="useGPS()">📡 Use My GPS</button>
+          <span id="req-coords" style="font-size:0.82rem;color:var(--text-secondary)"></span>
+        </div>
+      </div>
+
+      <div class="section">
+        <label class="form-label">📏 Max Distance</label>
+        <div class="slider-wrap">
+          <input type="range" id="req-distance" min="1" max="50" value="25" oninput="updateSlider(this)">
+          <div class="slider-label" id="distance-label">Up to 25 km away</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <label class="form-label">🔥 Popularity</label>
+        <div class="chips-grid">
+          <button class="chip active" data-pop="any" onclick="selectPop(this)">Any</button>
+          <button class="chip" data-pop="niche" onclick="selectPop(this)">🎭 Niche</button>
+          <button class="chip" data-pop="moderate" onclick="selectPop(this)">🏪 Moderate</button>
+          <button class="chip" data-pop="mainstream" onclick="selectPop(this)">🌟 Mainstream</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <label class="form-label">⭐ Minimum Rating</label>
+        <div class="star-picker" id="star-picker">
+          <span class="star active" data-val="1" onclick="pickStar(1)">★</span>
+          <span class="star active" data-val="2" onclick="pickStar(2)">★</span>
+          <span class="star active" data-val="3" onclick="pickStar(3)">★</span>
+          <span class="star" data-val="4" onclick="pickStar(4)">★</span>
+          <span class="star" data-val="5" onclick="pickStar(5)">★</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <label class="form-label">💰 Budget</label>
+        <div class="chips-grid">
+          <button class="chip active" data-budget="any" onclick="selectBudget(this)">Any</button>
+          <button class="chip" data-budget="budget" onclick="selectBudget(this)">💰 Budget</button>
+          <button class="chip" data-budget="moderate" onclick="selectBudget(this)">💰💰 Moderate</button>
+          <button class="chip" data-budget="upscale" onclick="selectBudget(this)">💰💰💰 Upscale</button>
+          <button class="chip" data-budget="luxury" onclick="selectBudget(this)">💰💰💰💰 Luxury</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <label class="form-label">📍 Location Types</label>
+        <div class="chips-grid" id="location-types-grid"></div>
+      </div>
+
+      <button class="btn btn-primary btn-block btn-lg" id="save-req-btn" onclick="handleSaveReq()" style="margin-top:20px">Save Requirements</button>
+    </div>
+  </div>
+</div>
+
+<!-- Recommendations Modal -->
+<div class="modal-overlay" id="recs-modal">
+  <div class="modal modal-full modal-inner">
+    <h3 class="modal-title">🏆 Recommended Places</h3>
+    <div id="recs-count" style="color:var(--text-secondary);margin-bottom:16px"></div>
+    <div id="recs-container">
+      <div class="skeleton" style="height:100px;margin-bottom:12px"></div>
+      <div class="skeleton" style="height:100px;margin-bottom:12px"></div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/maps.js"></script>
+<script>
+  let outingId = new URLSearchParams(window.location.search).get('id');
+  let outingData = null;
+  let reqLat = null, reqLng = null;
+  let reqPopularity = 'any', reqMinRating = 3, reqBudget = 'any', reqLocationTypes = [];
+
+  async function onAuthReady() {
+    if (!outingId) { window.location.href = '/'; return; }
+    await loadOuting();
+  }
+
+  async function loadOuting() {
+    try {
+      const data = await getOuting(outingId);
+      outingData = data;
+      document.getElementById('loading-state').style.display = 'none';
+      renderOuting(data);
+    } catch (err) {
+      document.getElementById('loading-state').style.display = 'none';
+      if (err.status === 403) {
+        document.getElementById('restricted-view').style.display = 'block';
+        return;
+      }
+      if (err.status === 401 && outingData === null) {
+        // Not logged in, could be open outing
+        document.getElementById('public-view').style.display = 'block';
+        document.getElementById('public-view').innerHTML = `
+          <div class="restricted-view">
+            <div class="lock">🌐</div>
+            <h2>Sign in to view this outing</h2>
+            <p style="color:var(--text-secondary)">You need to be signed in to see outing details.</p>
+            <a href="/index.html?login=1" class="btn btn-primary" style="margin-top:20px">Sign In</a>
+          </div>`;
+        return;
+      }
+      showToast('Failed to load outing', 'error');
+    }
+  }
+
+  function renderOuting(data) {
+    const { outing, members, current_member, pending_approvals } = data;
+    document.title = `${outing.name} — Shelah`;
+
+    // Not a member and open outing
+    if (!current_member && outing.outing_type === 'open') {
+      document.getElementById('public-view').style.display = 'block';
+      document.getElementById('public-view').innerHTML = `
+        <div style="text-align:center;padding:48px 20px">
+          <h1 style="font-size:2rem;font-weight:900">${escapeHtml(outing.name)}</h1>
+          <p style="color:var(--text-secondary);margin:8px 0">${formatDate(outing.scheduled_date)}</p>
+          <span class="pill pill-open">🌐 Open</span>
+          <p style="margin-top:24px;color:var(--text-secondary)">This is an open outing! Sign in and ask to be invited.</p>
+        </div>`;
+      return;
+    }
+
+    // Invited (pending)
+    if (current_member && current_member.invite_status === 'pending') {
+      document.getElementById('invited-view').style.display = 'block';
+      const typeCls = { open:'pill-open', closed:'pill-closed', restricted:'pill-restricted' }[outing.outing_type];
+      document.getElementById('invited-view').innerHTML = `
+        <div style="text-align:center;padding:48px 20px">
+          <h1 style="font-size:2rem;font-weight:900">${escapeHtml(outing.name)}</h1>
+          <p style="color:var(--text-secondary);margin:8px 0">${formatDate(outing.scheduled_date)}</p>
+          <span class="pill ${typeCls}">${outing.outing_type}</span>
+          <p style="margin:24px 0;font-size:1.1rem">You've been invited to join <strong>${escapeHtml(outing.name)}</strong>! 🎉</p>
+          <button class="btn btn-accent btn-lg" id="accept-btn" onclick="handleAccept()">🤝 Accept Invite</button>
+          <div class="section" style="margin-top:32px;text-align:left">
+            <h3 class="section-title">Members</h3>
+            <div class="members-list">${members.map(m => `
+              <div class="member-row">
+                ${avatarHtml(m.display_name)}
+                <span class="member-name">${escapeHtml(m.display_name)}</span>
+                <span class="member-status">${m.invite_status==='accepted'?'✅':'⏳'}</span>
+              </div>`).join('')}
+            </div>
+          </div>
+        </div>`;
+      return;
+    }
+
+    // Member view (accepted)
+    document.getElementById('member-view').style.display = 'block';
+    const typeCls = { open:'pill-open', closed:'pill-closed', restricted:'pill-restricted' }[outing.outing_type];
+    const typeLabel = { open:'🌐 Open', closed:'🔒 Closed', restricted:'🔑 Restricted' }[outing.outing_type];
+    const shareUrl = window.location.origin + '/outing.html?id=' + outing.id;
+
+    let actionsHtml = '';
+    if (outing.outing_type !== 'closed') {
+      actionsHtml += `<button class="btn btn-outline" onclick="openInviteModal()">👥 Invite Friend</button>`;
+    }
+    actionsHtml += `<button class="btn btn-primary" onclick="openReqModal()">📋 Edit Requirements</button>`;
+    actionsHtml += `<button class="btn btn-accent" onclick="openRecsModal()">🏆 View Recommendations</button>`;
+
+    document.getElementById('member-view').innerHTML = `
+      <div class="outing-header" style="margin-top:32px">
+        <h1>${escapeHtml(outing.name)}</h1>
+        <div class="outing-date">${formatDate(outing.scheduled_date)}</div>
+        <span class="pill ${typeCls}">${typeLabel}</span>
+        <div class="share-box">
+          <input type="text" value="${shareUrl}" readonly id="share-url">
+          <button class="btn btn-sm btn-outline" onclick="copyLink()">📋 Copy</button>
+        </div>
+        <div class="outing-actions">${actionsHtml}</div>
+      </div>
+      <div class="section">
+        <h3 class="section-title">👥 Members (${members.length})</h3>
+        <div class="members-list" id="members-list">
+          ${members.map(m => `
+            <div class="member-row">
+              ${avatarHtml(m.display_name)}
+              <span class="member-name">${escapeHtml(m.display_name)}</span>
+              <span class="member-status" title="Invite">${m.invite_status==='accepted'?'✅':'⏳'}</span>
+              <span class="member-status" title="Requirements">${m.requirements_submitted?'📋':'❓'}</span>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  async function handleAccept() {
+    const btn = document.getElementById('accept-btn');
+    btnLoading(btn, true);
+    try {
+      await acceptInvite(outingId);
+      showToast('Invite accepted! 🎉', 'success');
+      location.reload();
+    } catch (err) {
+      showToast(err.error || 'Failed to accept invite', 'error');
+      btnLoading(btn, false);
+    }
+  }
+
+  function copyLink() {
+    const url = document.getElementById('share-url').value;
+    navigator.clipboard.writeText(url).then(() => showToast('Link copied! 📋', 'success'));
+  }
+
+  // --- Invite ---
+  async function openInviteModal() {
+    openModal('invite-modal');
+    const container = document.getElementById('invite-friends-list');
+    try {
+      const data = await getFriends();
+      const memberIds = (outingData?.members||[]).map(m => m.user_id);
+      const available = data.friends.filter(f => !memberIds.includes(f.id));
+      if (!available.length) {
+        container.innerHTML = '<div class="empty-state"><span class="icon">✨</span><p>All your friends are already in this outing!</p></div>';
+      } else {
+        container.innerHTML = available.map(f => `
+          <div class="member-row">
+            ${avatarHtml(f.display_name)}
+            <span class="member-name">${escapeHtml(f.display_name)}</span>
+            <button class="btn btn-sm btn-primary" onclick="handleInvite('${f.id}',this)">Invite</button>
+          </div>`).join('');
+      }
+    } catch (err) {
+      container.innerHTML = '<p style="color:var(--error)">Failed to load friends</p>';
+    }
+    // Load pending approvals for restricted
+    if (outingData?.outing?.outing_type === 'restricted') {
+      const appSection = document.getElementById('pending-approvals-section');
+      const appList = document.getElementById('pending-approvals-list');
+      const approvals = outingData?.pending_approvals || [];
+      if (approvals.length) {
+        appSection.style.display = 'block';
+        appList.innerHTML = approvals.map(a => `
+          <div class="member-row" id="approval-${a.candidate_user_id}">
+            ${avatarHtml(a.candidate_name)}
+            <span class="member-name">Invite ${escapeHtml(a.candidate_name)}?</span>
+            <button class="btn btn-sm btn-primary" onclick="handleApproval('${a.candidate_user_id}',true)">✓</button>
+            <button class="btn btn-sm btn-danger" onclick="handleApproval('${a.candidate_user_id}',false)">✗</button>
+          </div>`).join('');
+      }
+    }
+  }
+
+  async function handleInvite(userId, btn) {
+    btnLoading(btn, true);
+    try {
+      await inviteToOuting(outingId, userId);
+      showToast('Invitation sent!', 'success');
+      btn.parentElement.remove();
+    } catch (err) {
+      showToast(err.error || 'Failed to invite', 'error');
+      btnLoading(btn, false);
+    }
+  }
+
+  async function handleApproval(candidateId, approved) {
+    try {
+      await approveInvite(outingId, candidateId, approved);
+      document.getElementById('approval-' + candidateId)?.remove();
+      showToast(approved ? 'Approved!' : 'Rejected', approved ? 'success' : 'info');
+    } catch (err) {
+      showToast(err.error || 'Failed', 'error');
+    }
+  }
+
+  // --- Requirements ---
+  async function openReqModal() {
+    openModal('req-modal');
+    try {
+      const data = await getRequirements(outingId);
+      // Populate location types
+      const grid = document.getElementById('location-types-grid');
+      grid.innerHTML = (data.location_types||[]).map(lt => {
+        const active = (data.selected_location_type_ids||[]).includes(lt.id) ? 'active' : '';
+        return `<button class="chip ${active}" data-ltid="${lt.id}" onclick="toggleLocType(this)">${lt.icon||'📍'} ${escapeHtml(lt.name)}</button>`;
+      }).join('');
+      // Populate saved values
+      const req = data.requirements;
+      if (req) {
+        reqLat = parseFloat(req.home_latitude) || null;
+        reqLng = parseFloat(req.home_longitude) || null;
+        document.getElementById('req-distance').value = req.max_distance_km || 25;
+        updateSlider(document.getElementById('req-distance'));
+        reqPopularity = req.popularity_preference || 'any';
+        reqMinRating = parseFloat(req.min_rating) || 3;
+        reqBudget = req.budget_tier || 'any';
+        pickStar(Math.round(reqMinRating));
+        document.querySelectorAll('[data-pop]').forEach(c => c.classList.toggle('active', c.dataset.pop === reqPopularity));
+        document.querySelectorAll('[data-budget]').forEach(c => c.classList.toggle('active', c.dataset.budget === reqBudget));
+      }
+      reqLocationTypes = data.selected_location_type_ids || [];
+      // Init map
+      initLocationPicker('req-map', (loc) => {
+        reqLat = loc.lat; reqLng = loc.lng;
+        document.getElementById('req-coords').textContent = `${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}`;
+      }, reqLat, reqLng);
+    } catch (err) {
+      showToast('Failed to load requirements', 'error');
+    }
+  }
+
+  function useGPS() {
+    tryGPS((loc) => {
+      reqLat = loc.lat; reqLng = loc.lng;
+      setMapLocation('req-map', loc.lat, loc.lng);
+      document.getElementById('req-coords').textContent = `${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}`;
+      showToast('GPS location set!', 'success');
+    }, (err) => {
+      showToast('GPS failed: ' + err, 'error');
+    });
+  }
+
+  function updateSlider(el) {
+    const val = el.value;
+    document.getElementById('distance-label').textContent = `Up to ${val} km away`;
+    const pct = ((val - 1) / 49) * 100;
+    el.style.background = `linear-gradient(90deg, var(--primary) ${pct}%, var(--border) ${pct}%)`;
+  }
+
+  function selectPop(el) {
+    reqPopularity = el.dataset.pop;
+    el.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  function pickStar(val) {
+    reqMinRating = val;
+    document.querySelectorAll('#star-picker .star').forEach(s => {
+      s.classList.toggle('active', parseInt(s.dataset.val) <= val);
+    });
+  }
+
+  function selectBudget(el) {
+    reqBudget = el.dataset.budget;
+    el.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  function toggleLocType(el) {
+    el.classList.toggle('active');
+    const id = el.dataset.ltid;
+    if (el.classList.contains('active')) {
+      if (!reqLocationTypes.includes(id)) reqLocationTypes.push(id);
+    } else {
+      reqLocationTypes = reqLocationTypes.filter(x => x !== id);
+    }
+  }
+
+  async function handleSaveReq() {
+    const btn = document.getElementById('save-req-btn');
+    btnLoading(btn, true);
+    try {
+      await saveRequirements({
+        outing_id: outingId,
+        home_latitude: reqLat,
+        home_longitude: reqLng,
+        max_distance_km: parseInt(document.getElementById('req-distance').value),
+        popularity_preference: reqPopularity,
+        min_rating: reqMinRating,
+        budget_tier: reqBudget,
+        location_type_ids: reqLocationTypes
+      });
+      showToast('Requirements saved! ✅', 'success');
+      closeModal('req-modal');
+      loadOuting();
+    } catch (err) {
+      showToast(err.error || 'Failed to save', 'error');
+    } finally {
+      btnLoading(btn, false);
+    }
+  }
+
+  // --- Recommendations ---
+  async function openRecsModal() {
+    openModal('recs-modal');
+    const container = document.getElementById('recs-container');
+    const countEl = document.getElementById('recs-count');
+    container.innerHTML = '<div class="skeleton" style="height:100px;margin-bottom:12px"></div><div class="skeleton" style="height:100px"></div>';
+    try {
+      const data = await getRecommendations(outingId);
+      if (data.members_with_requirements === 0) {
+        container.innerHTML = '<div class="empty-state"><span class="icon">📋</span><div class="title">No requirements submitted yet</div><p>Members need to submit their requirements first.</p></div>';
+        countEl.textContent = '';
+        return;
+      }
+      countEl.textContent = `Showing ${data.places.length} matching places (${data.members_with_requirements}/${data.total_members} members submitted requirements)`;
+      if (!data.places.length) {
+        container.innerHTML = '<div class="empty-state"><span class="icon">😅</span><div class="title">No places match everyone\'s requirements</div><p>Try relaxing some constraints.</p></div>';
+        return;
+      }
+      container.innerHTML = '<div class="places-grid">' + data.places.map(p => renderPlaceCard(p)).join('') + '</div>';
+    } catch (err) {
+      container.innerHTML = '<div class="empty-state"><span class="icon">⚠️</span><p>Failed to load recommendations</p></div>';
+    }
+  }
+
+  function renderPlaceCard(p) {
+    const thumb = p.thumbnail_url
+      ? `<img src="${escapeHtml(p.thumbnail_url)}" alt="${escapeHtml(p.name)}">`
+      : `<span>${p.location_type_icon||'📍'}</span>`;
+    const dist = p.distance_km !== null ? `${p.distance_km} km away` : '';
+    const popCls = { niche:'pill-niche', moderate:'pill-moderate', mainstream:'pill-mainstream' }[p.popularity] || '';
+    const budgetCls = { budget:'pill-budget', moderate:'pill-moderate', upscale:'pill-upscale', luxury:'pill-luxury' }[p.budget_tier] || '';
+    const votedCls = p.user_voted ? 'voted' : '';
+
+    return `<div class="place-card" id="place-${p.id}">
+      <div class="place-thumb">${thumb}</div>
+      <div class="place-info">
+        <div class="place-name">${escapeHtml(p.name)}</div>
+        <div class="place-meta">
+          <span class="pill ${popCls}">${p.popularity||''}</span>
+          <span class="pill ${budgetCls}">${budgetEmoji(p.budget_tier)} ${p.price_per_person_egp?p.price_per_person_egp+' EGP':''}</span>
+        </div>
+        <div class="place-meta">
+          ${starsHtml(p.rating)}
+          ${p.location_type_name ? '<span>'+escapeHtml(p.location_type_name)+'</span>' : ''}
+          ${dist ? '<span>📍 '+dist+'</span>' : ''}
+        </div>
+      </div>
+      <div class="place-actions">
+        <button class="vote-btn ${votedCls}" onclick="handleVote('${p.id}',this)" title="Vote">🔥</button>
+        <span class="vote-count" id="vc-${p.id}">${p.vote_count} votes</span>
+      </div>
+    </div>`;
+  }
+
+  async function handleVote(placeId, btn) {
+    try {
+      const data = await toggleVote(outingId, placeId);
+      btn.classList.toggle('voted', data.voted);
+      document.getElementById('vc-' + placeId).textContent = data.vote_count + ' votes';
+      showToast(data.voted ? 'Voted! 🔥' : 'Vote removed', data.voted ? 'success' : 'info');
+    } catch (err) {
+      showToast(err.error || 'Failed to vote', 'error');
+    }
+  }
+
+  // Init slider on load
+  document.addEventListener('DOMContentLoaded', () => {
+    updateSlider(document.getElementById('req-distance'));
+  });
+</script>
+</body>
+</html>

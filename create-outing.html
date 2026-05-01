@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Create a new outing and invite your friends.">
+  <title>Create Outing — Shelah</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<nav class="nav"><div class="container"><a href="/" class="nav-brand"><span>🎉</span> Shelah</a><div id="nav-user"></div></div></nav>
+
+<main class="container" style="padding:32px 20px 48px">
+  <div class="card" style="max-width:560px;margin:0 auto">
+    <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:24px">🎯 Create Outing</h1>
+
+    <div class="form-group">
+      <label class="form-label">Outing Name</label>
+      <input type="text" class="form-input" id="outing-name" placeholder="Friday Night Out, Beach Trip...">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Date</label>
+      <div id="selected-date" class="form-input" style="cursor:pointer;color:var(--text-light)" onclick="openModal('date-modal')">No date set — tap to pick</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Type</label>
+      <div id="selected-type" class="form-input" style="cursor:pointer;color:var(--text-light)" onclick="openModal('type-modal')">No type set — tap to choose</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Invited Friends</label>
+      <div id="invited-chips" class="chips-grid" style="margin-bottom:8px"></div>
+      <button class="btn btn-outline btn-sm" onclick="openMembersModal()">+ Add Member</button>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:28px">
+      <button class="btn btn-primary btn-lg" style="flex:1" id="confirm-btn" onclick="confirmCreate()">✓ Confirm</button>
+      <a href="/" class="btn btn-ghost btn-lg">Cancel</a>
+    </div>
+  </div>
+</main>
+
+<!-- Type Modal -->
+<div class="modal-overlay" id="type-modal">
+  <div class="modal modal-inner">
+    <h3 class="modal-title">Choose Outing Type</h3>
+    <div class="type-options">
+      <div class="type-option" onclick="selectType('open')"><div class="icon">🌐</div><div class="name">Open</div><div class="desc">Anyone with the link can join</div></div>
+      <div class="type-option" onclick="selectType('closed')"><div class="icon">🔒</div><div class="name">Closed</div><div class="desc">No new members after creation</div></div>
+      <div class="type-option" onclick="selectType('restricted')"><div class="icon">🔑</div><div class="name">Restricted</div><div class="desc">New members need everyone's approval</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Date Modal -->
+<div class="modal-overlay" id="date-modal">
+  <div class="modal modal-inner">
+    <h3 class="modal-title">Pick a Date</h3>
+    <div class="calendar" id="calendar"></div>
+  </div>
+</div>
+
+<!-- Members Modal -->
+<div class="modal-overlay" id="members-modal">
+  <div class="modal modal-inner">
+    <h3 class="modal-title">👥 Select Friends</h3>
+    <div id="friends-list-container">
+      <div class="empty-state"><span class="icon">👥</span><p>Loading friends...</p></div>
+    </div>
+    <button class="btn btn-primary btn-block" style="margin-top:16px" onclick="closeModal('members-modal')">Done</button>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+  let selectedDate = null;
+  let selectedType = null;
+  let invitedFriends = []; // {id, display_name}
+  let calendarMonth, calendarYear;
+
+  function onAuthReady() {
+    if (!requireAuth()) return;
+  }
+
+  // --- Type ---
+  function selectType(type) {
+    selectedType = type;
+    const labels = { open: '🌐 Open', closed: '🔒 Closed', restricted: '🔑 Restricted' };
+    const el = document.getElementById('selected-type');
+    el.textContent = labels[type];
+    el.style.color = 'var(--text)';
+    document.querySelectorAll('.type-option').forEach(o => o.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+    closeModal('type-modal');
+  }
+
+  // --- Calendar ---
+  function initCalendar() {
+    const now = new Date();
+    calendarMonth = now.getMonth();
+    calendarYear = now.getFullYear();
+    renderCalendar();
+  }
+
+  function renderCalendar() {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
+    const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+    const monthName = new Date(calendarYear, calendarMonth).toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
+    let html = `<div class="calendar-header">
+      <button class="calendar-nav" onclick="navMonth(-1)">‹</button>
+      <span class="month">${monthName}</span>
+      <button class="calendar-nav" onclick="navMonth(1)">›</button>
+    </div>
+    <div class="calendar-grid">`;
+    ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d => html += `<div class="calendar-day-label">${d}</div>`);
+    for (let i = 0; i < firstDay; i++) html += `<div></div>`;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(calendarYear, calendarMonth, d);
+      const iso = date.toISOString().split('T')[0];
+      const isPast = date < today;
+      const isToday = date.getTime() === today.getTime();
+      const isSelected = selectedDate === iso;
+      const cls = ['calendar-day', isPast?'disabled':'', isToday?'today':'', isSelected?'selected':''].filter(Boolean).join(' ');
+      html += `<div class="${cls}" onclick="${isPast?'':'pickDate(\\\''+iso+'\\\')'}">${d}</div>`;
+    }
+    html += '</div>';
+    document.getElementById('calendar').innerHTML = html;
+  }
+
+  function navMonth(dir) {
+    calendarMonth += dir;
+    if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; }
+    if (calendarMonth < 0) { calendarMonth = 11; calendarYear--; }
+    renderCalendar();
+  }
+
+  function pickDate(iso) {
+    selectedDate = iso;
+    const el = document.getElementById('selected-date');
+    el.textContent = formatDate(iso);
+    el.style.color = 'var(--text)';
+    renderCalendar();
+    setTimeout(() => closeModal('date-modal'), 200);
+  }
+
+  // --- Members ---
+  async function openMembersModal() {
+    openModal('members-modal');
+    const container = document.getElementById('friends-list-container');
+    try {
+      const data = await getFriends();
+      if (!data.friends.length) {
+        container.innerHTML = '<div class="empty-state"><span class="icon">👥</span><p>No friends yet. Add some from the home page!</p></div>';
+        return;
+      }
+      container.innerHTML = data.friends.map(f => {
+        const checked = invitedFriends.some(i => i.id === f.id) ? 'checked' : '';
+        return `<label class="friend-check">
+          <input type="checkbox" ${checked} onchange="toggleFriend('${f.id}','${escapeHtml(f.display_name)}',this.checked)">
+          ${avatarHtml(f.display_name, 32)}
+          <span>${escapeHtml(f.display_name)}</span>
+        </label>`;
+      }).join('');
+    } catch (err) {
+      container.innerHTML = '<p style="color:var(--error)">Failed to load friends</p>';
+    }
+  }
+
+  function toggleFriend(id, name, checked) {
+    if (checked) {
+      if (!invitedFriends.some(f => f.id === id)) invitedFriends.push({ id, display_name: name });
+    } else {
+      invitedFriends = invitedFriends.filter(f => f.id !== id);
+    }
+    renderChips();
+  }
+
+  function removeFriend(id) {
+    invitedFriends = invitedFriends.filter(f => f.id !== id);
+    renderChips();
+  }
+
+  function renderChips() {
+    const el = document.getElementById('invited-chips');
+    if (!invitedFriends.length) { el.innerHTML = ''; return; }
+    el.innerHTML = invitedFriends.map(f =>
+      `<span class="chip active">${escapeHtml(f.display_name)} <span class="chip-remove" onclick="removeFriend('${f.id}')">×</span></span>`
+    ).join('');
+  }
+
+  // --- Confirm ---
+  async function confirmCreate() {
+    const name = document.getElementById('outing-name').value.trim();
+    if (!name) return showToast('Please enter an outing name', 'error');
+    if (!selectedType) return showToast('Please choose an outing type', 'error');
+    if (!selectedDate) return showToast('Please pick a date', 'error');
+
+    const btn = document.getElementById('confirm-btn');
+    btnLoading(btn, true);
+    try {
+      const data = await createOuting(name, selectedType, selectedDate, invitedFriends.map(f => f.id));
+      showToast('Outing created! 🎉', 'success');
+      window.location.href = '/outing.html?id=' + data.outing_id;
+    } catch (err) {
+      showToast(err.error || 'Failed to create outing', 'error');
+    } finally {
+      btnLoading(btn, false);
+    }
+  }
+
+  initCalendar();
+</script>
+</body>
+</html>
