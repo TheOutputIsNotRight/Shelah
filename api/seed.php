@@ -11,13 +11,22 @@
 header('Content-Type: text/html; charset=utf-8');
 echo '<h1>Shelah — Database Setup</h1><pre>';
 
-$dsn = getenv('DATABASE_URL');
-if (!$dsn) {
+$dbUrl = getenv('DATABASE_URL');
+if (!$dbUrl) {
     die('ERROR: DATABASE_URL environment variable not set.');
 }
 
+$parsedUrl = parse_url($dbUrl);
+$host = $parsedUrl['host'] ?? '';
+$port = $parsedUrl['port'] ?? 5432;
+$user = $parsedUrl['user'] ?? '';
+$pass = $parsedUrl['pass'] ?? '';
+$db = ltrim($parsedUrl['path'] ?? '', '/');
+
+$dsn = "pgsql:host={$host};port={$port};dbname={$db};sslmode=require";
+
 try {
-    $pdo = new PDO($dsn, null, null, [
+    $pdo = new PDO($dsn, $user, $pass, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
     ]);
