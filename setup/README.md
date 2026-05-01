@@ -53,7 +53,7 @@ Or connect your GitHub repo to Vercel for automatic deployments.
 After deploying, visit this URL **once**:
 
 ```
-https://your-app.vercel.app/setup/seed.php
+https://your-app.vercel.app/api/setup/seed.php
 ```
 
 This will:
