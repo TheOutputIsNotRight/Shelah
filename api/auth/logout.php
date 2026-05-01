@@ -1,9 +1,8 @@
 <?php
-session_start();
+require_once __DIR__ . '/../session.php';
 header('Content-Type: application/json');
 require_once __DIR__ . '/../helpers.php';
 
-$_SESSION = [];
-session_destroy();
+destroySession();
 
 jsonResponse(['message' => 'Logged out successfully']);

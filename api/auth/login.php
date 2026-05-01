@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/../session.php';
 header('Content-Type: application/json');
 require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/../helpers.php';
@@ -24,7 +24,7 @@ if (!$user || !password_verify($password, $user['password_hash'])) {
     jsonResponse(['error' => 'Invalid email or password'], 401);
 }
 
-$_SESSION['user_id'] = $user['id'];
+createSession($user['id']);
 
 unset($user['password_hash']);
 jsonResponse(['user' => $user]);

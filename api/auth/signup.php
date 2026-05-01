@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/../session.php';
 header('Content-Type: application/json');
 require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/../helpers.php';
@@ -42,6 +42,6 @@ $stmt->execute([
 ]);
 
 $user = $stmt->fetch();
-$_SESSION['user_id'] = $user['id'];
+createSession($user['id']);
 
 jsonResponse(['user' => $user], 201);

@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/../session.php';
 header('Content-Type: application/json');
 require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/../helpers.php';
@@ -17,8 +17,7 @@ $stmt->execute(['id' => $_SESSION['user_id']]);
 $user = $stmt->fetch();
 
 if (!$user) {
-    $_SESSION = [];
-    session_destroy();
+    destroySession();
     jsonResponse(['error' => 'User not found'], 401);
 }
 
