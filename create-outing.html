@@ -126,7 +126,7 @@
       const isToday = date.getTime() === today.getTime();
       const isSelected = selectedDate === iso;
       const cls = ['calendar-day', isPast?'disabled':'', isToday?'today':'', isSelected?'selected':''].filter(Boolean).join(' ');
-      html += `<div class="${cls}" onclick="${isPast?'':'pickDate(\\\''+iso+'\\\')'}">${d}</div>`;
+      html += `<div class="${cls}" ${isPast ? '' : `onclick="pickDate('${iso}')"`}>${d}</div>`;
     }
     html += '</div>';
     document.getElementById('calendar').innerHTML = html;
