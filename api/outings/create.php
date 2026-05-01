@@ -32,35 +32,47 @@ try {
     $pdo->beginTransaction();
 
     // Create outing
-    $stmt = $pdo->prepare('INSERT INTO outings (name, creator_id, outing_type, scheduled_date) VALUES (:name, :creator_id, :outing_type, :scheduled_date) RETURNING id');
-    $stmt->execute([
-        'name' => $name,
-        'creator_id' => $userId,
-        'outing_type' => $outingType,
-        'scheduled_date' => $scheduledDate
-    ]);
-    $outing = $stmt->fetch();
-    $outingId = $outing['id'];
+    try {
+        $stmt = $pdo->prepare('INSERT INTO outings (name, creator_id, outing_type, scheduled_date) VALUES (:name, :creator_id, :outing_type, :scheduled_date) RETURNING id');
+        $stmt->execute([
+            'name' => $name,
+            'creator_id' => $userId,
+            'outing_type' => $outingType,
+            'scheduled_date' => $scheduledDate
+        ]);
+        $outing = $stmt->fetch();
+        $outingId = $outing['id'];
+    } catch (Exception $e) {
+        throw new Exception("Create outing failed: " . $e->getMessage());
+    }
 
     // Add creator as accepted member
-    $stmt = $pdo->prepare('INSERT INTO outing_members (outing_id, user_id, invite_status, invited_by) VALUES (:outing_id, :user_id, :status, :invited_by)');
-    $stmt->execute([
-        'outing_id' => $outingId,
-        'user_id' => $userId,
-        'status' => 'accepted',
-        'invited_by' => $userId
-    ]);
-
-    // Add invitees
-    foreach ($inviteeIds as $inviteeId) {
-        if ($inviteeId === $userId) continue;
-        $stmt = $pdo->prepare('INSERT INTO outing_members (outing_id, user_id, invite_status, invited_by) VALUES (:outing_id, :user_id, :status, :invited_by) ON CONFLICT (outing_id, user_id) DO NOTHING');
+    try {
+        $stmt = $pdo->prepare('INSERT INTO outing_members (outing_id, user_id, invite_status, invited_by) VALUES (:outing_id, :user_id, :status, :invited_by)');
         $stmt->execute([
             'outing_id' => $outingId,
-            'user_id' => $inviteeId,
-            'status' => 'pending',
+            'user_id' => $userId,
+            'status' => 'accepted',
             'invited_by' => $userId
         ]);
+    } catch (Exception $e) {
+        throw new Exception("Add creator failed: " . $e->getMessage());
+    }
+
+    // Add invitees
+    foreach ($inviteeIds as $index => $inviteeId) {
+        if ($inviteeId === $userId) continue;
+        try {
+            $stmt = $pdo->prepare('INSERT INTO outing_members (outing_id, user_id, invite_status, invited_by) VALUES (:outing_id, :user_id, :status, :invited_by) ON CONFLICT (outing_id, user_id) DO NOTHING');
+            $stmt->execute([
+                'outing_id' => $outingId,
+                'user_id' => $inviteeId,
+                'status' => 'pending',
+                'invited_by' => $userId
+            ]);
+        } catch (Exception $e) {
+            throw new Exception("Add invitee {$index} failed: " . $e->getMessage());
+        }
     }
 
     $pdo->commit();
