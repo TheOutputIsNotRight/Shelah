@@ -81,13 +81,22 @@ nav.nav {
 }
 
 .nav-logo {
-    font-family: 'Baloo 2', sans-serif;
-    font-weight: 800;
-    font-size: 28px;
-    line-height: 1;
-    display: flex;
-    align-items: baseline;
-    text-decoration: none
+    display: block;
+    width: 155px;
+    height: 40px;
+    position: relative;
+    text-decoration: none;
+}
+.nav-logo .row {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%) scale(0.42);
+    transform-origin: left center;
+    margin: 0;
+}
+.nav-logo .tag {
+    display: none;
 }
 
 .nav-logo .l1 {
@@ -1216,17 +1225,6 @@ textarea.text-input {
     font-weight: 800;
 }
 
-/* FONT B: Paytone One */
-.fb {
-    font-family: 'Paytone One', cursive;
-}
-
-/* FONT C: Space Grotesk */
-.fc {
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 700;
-}
-
 /* gradient text helper */
 .gtext {
     -webkit-background-clip: text;
@@ -1411,4 +1409,10 @@ textarea.text-input {
 .fnote strong {
     color: #777;
     font-weight: 600;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    gap: 38px;
 }
