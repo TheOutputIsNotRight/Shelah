@@ -130,14 +130,8 @@
           
           <div>
             <div class="req-section">
-              <div class="req-label">💰 Budget Preference</div>
-              <div class="chips-grid">
-                <button class="chip active" data-budget="any" onclick="selectBudget(this)">Any Budget</button>
-                <button class="chip" data-budget="budget" onclick="selectBudget(this)">💰 Budget</button>
-                <button class="chip" data-budget="moderate" onclick="selectBudget(this)">💰💰 Moderate</button>
-                <button class="chip" data-budget="upscale" onclick="selectBudget(this)">💰💰💰 Upscale</button>
-                <button class="chip" data-budget="luxury" onclick="selectBudget(this)">💰💰💰💰 Luxury</button>
-              </div>
+              <div class="req-label">💰 Max Price Per Person (EGP)</div>
+              <input type="number" id="req-budget" class="text-input" placeholder="e.g. 500 (Leave blank for any)" min="1">
             </div>
 
             <div class="req-section">
@@ -185,7 +179,7 @@
     let outingId = new URLSearchParams(window.location.search).get('id');
     let outingData = null;
     let reqLat = null, reqLng = null;
-    let reqPopularity = 'any', reqMinRating = 3, reqBudget = 'any', reqLocationTypes = [];
+    let reqPopularity = 'any', reqMinRating = 3, reqLocationTypes = [];
 
     async function onAuthReady() {
       if (!outingId) { window.location.href = '/groups.html'; return; }
@@ -489,10 +483,9 @@
           updateSlider(document.getElementById('req-distance'));
           reqPopularity = req.popularity_preference || 'any';
           reqMinRating = parseFloat(req.min_rating) || 3;
-          reqBudget = req.budget_tier || 'any';
+          document.getElementById('req-budget').value = parseInt(req.max_price_egp) || '';
           pickStar(Math.round(reqMinRating));
           document.querySelectorAll('[data-pop]').forEach(c => c.classList.toggle('active', c.dataset.pop === reqPopularity));
-          document.querySelectorAll('[data-budget]').forEach(c => c.classList.toggle('active', c.dataset.budget === reqBudget));
         }
         reqLocationTypes = data.selected_location_type_ids || [];
         
@@ -537,12 +530,6 @@
       });
     }
 
-    function selectBudget(el) {
-      reqBudget = el.dataset.budget;
-      el.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-      el.classList.add('active');
-    }
-
     function toggleLocType(el) {
       el.classList.toggle('active');
       const id = el.dataset.ltid;
@@ -564,7 +551,7 @@
           max_distance_km: parseInt(document.getElementById('req-distance').value),
           popularity_preference: reqPopularity,
           min_rating: reqMinRating,
-          budget_tier: reqBudget,
+          max_price_egp: parseInt(document.getElementById('req-budget').value) || null,
           location_type_ids: reqLocationTypes
         });
         showPageToast('Preferences saved! ✅');

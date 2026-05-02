@@ -37,7 +37,6 @@ CREATE TABLE IF NOT EXISTS places (
     longitude DECIMAL(11, 8),
     rating DECIMAL(2,1),
     popularity VARCHAR(20),
-    budget_tier VARCHAR(20),
     price_per_person_egp INTEGER,
     thumbnail_url TEXT,
     created_at TIMESTAMP DEFAULT NOW()
@@ -87,7 +86,7 @@ CREATE TABLE IF NOT EXISTS user_requirements (
     max_distance_km INTEGER,
     popularity_preference VARCHAR(20),
     min_rating DECIMAL(2,1),
-    budget_tier VARCHAR(20),
+    max_price_egp INTEGER,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
     UNIQUE(outing_id, user_id)

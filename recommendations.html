@@ -189,7 +189,7 @@
                 
                 <div class="rc-stats">
                   <div class="rc-stat">📍 ${p.distance_km ? p.distance_km+' km away' : escapeHtml(p.city||'')}</div>
-                  <div class="rc-stat">${budgetEmoji(p.budget_tier)}</div>
+                  <div class="rc-stat">💰 ${p.price_per_person_egp ? p.price_per_person_egp + ' EGP' : 'Price varies'}</div>
                   <div class="rc-stat">⭐ ${parseFloat(p.rating).toFixed(1)}</div>
                 </div>
                 

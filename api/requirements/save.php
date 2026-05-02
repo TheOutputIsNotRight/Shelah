@@ -17,7 +17,7 @@ $homeLng = $data['home_longitude'] ?? null;
 $maxDistance = $data['max_distance_km'] ?? 25;
 $popularityPref = $data['popularity_preference'] ?? 'any';
 $minRating = $data['min_rating'] ?? 1.0;
-$budgetTier = $data['budget_tier'] ?? 'any';
+$maxPriceEgp = $data['max_price_egp'] ?? null;
 $locationTypeIds = $data['location_type_ids'] ?? [];
 
 if (!$outingId) {
@@ -36,11 +36,11 @@ try {
 
     // Upsert requirements
     $stmt = $pdo->prepare('
-        INSERT INTO user_requirements (outing_id, user_id, home_latitude, home_longitude, max_distance_km, popularity_preference, min_rating, budget_tier)
+        INSERT INTO user_requirements (outing_id, user_id, home_latitude, home_longitude, max_distance_km, popularity_preference, min_rating, max_price_egp)
         VALUES (:oid, :uid, :lat, :lng, :dist, :pop, :rating, :budget)
         ON CONFLICT (outing_id, user_id) DO UPDATE SET
             home_latitude = :lat2, home_longitude = :lng2, max_distance_km = :dist2,
-            popularity_preference = :pop2, min_rating = :rating2, budget_tier = :budget2,
+            popularity_preference = :pop2, min_rating = :rating2, max_price_egp = :budget2,
             updated_at = NOW()
         RETURNING id
     ');
@@ -48,10 +48,10 @@ try {
         'oid' => $outingId, 'uid' => $userId,
         'lat' => $homeLat, 'lng' => $homeLng,
         'dist' => $maxDistance, 'pop' => $popularityPref,
-        'rating' => $minRating, 'budget' => $budgetTier,
+        'rating' => $minRating, 'budget' => $maxPriceEgp,
         'lat2' => $homeLat, 'lng2' => $homeLng,
         'dist2' => $maxDistance, 'pop2' => $popularityPref,
-        'rating2' => $minRating, 'budget2' => $budgetTier
+        'rating2' => $minRating, 'budget2' => $maxPriceEgp
     ]);
     $req = $stmt->fetch();
     $requirementId = $req['id'];

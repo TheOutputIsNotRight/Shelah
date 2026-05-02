@@ -79,15 +79,15 @@ foreach ($allPlaces as $place) {
         $popularityScore = 100;
         $locationTypeScore = 100;
 
-        // Budget score (25%) - 100 if within tier, degrades by tier distance
-        if ($req['budget_tier'] && $req['budget_tier'] !== 'any' && $place['budget_tier']) {
-            $reqLevel = budgetTierLevel($req['budget_tier']);
-            $placeLevel = budgetTierLevel($place['budget_tier']);
-            if ($placeLevel <= $reqLevel) {
+        // Budget score (25%) - 100 if within max budget, degrades based on overage
+        if (isset($req['max_price_egp']) && $req['max_price_egp'] > 0 && isset($place['price_per_person_egp'])) {
+            $maxPrice = (int)$req['max_price_egp'];
+            $placePrice = (int)$place['price_per_person_egp'];
+            if ($placePrice <= $maxPrice) {
                 $budgetScore = 100;
             } else {
-                $diff = $placeLevel - $reqLevel;
-                $budgetScore = max(0, 100 - ($diff * 35));
+                $over = ($placePrice - $maxPrice) / $maxPrice;
+                $budgetScore = max(0, 100 - ($over * 100)); // 50% over = 50 score
             }
         }
 
