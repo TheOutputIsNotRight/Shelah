@@ -212,7 +212,11 @@
       actionsHtml += `<button class="btn btn-outline" onclick="openInviteModal()">👥 Invite Friend</button>`;
     }
     actionsHtml += `<button class="btn btn-primary" onclick="openReqModal()">📋 Edit Requirements</button>`;
-    actionsHtml += `<button class="btn btn-accent" onclick="openRecsModal()">🏆 View Recommendations</button>`;
+    
+    const allSubmitted = members.length > 0 && members.every(m => m.requirements_submitted);
+    if (allSubmitted) {
+      actionsHtml += `<button class="btn btn-accent" onclick="openRecsModal()">🏆 View Recommendations</button>`;
+    }
 
     document.getElementById('member-view').innerHTML = `
       <div class="outing-header" style="margin-top:32px">

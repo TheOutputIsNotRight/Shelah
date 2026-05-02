@@ -25,7 +25,7 @@ $outings = $stmt->fetchAll();
 // Get member counts and first 4 members for each outing
 foreach ($outings as &$outing) {
     $stmt = $pdo->prepare('
-        SELECT u.id, u.display_name, om.invite_status
+        SELECT u.id, u.display_name, om.invite_status, om.requirements_submitted
         FROM outing_members om
         JOIN users u ON u.id = om.user_id
         WHERE om.outing_id = :oid
@@ -35,6 +35,15 @@ foreach ($outings as &$outing) {
     $members = $stmt->fetchAll();
     $outing['member_count'] = count($members);
     $outing['members_preview'] = array_slice($members, 0, 4);
+
+    $all_submitted = count($members) > 0;
+    foreach ($members as $m) {
+        if (!$m['requirements_submitted']) {
+            $all_submitted = false;
+            break;
+        }
+    }
+    $outing['all_requirements_submitted'] = $all_submitted;
 }
 
 jsonResponse(['outings' => $outings]);

@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shelah — Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --red: #FF1D58;
+            --pink: #F75990;
+            --yellow: #FFF685;
+            --yellow-warm: #ffe033;
+            --yellow-soft: #fffde0;
+            --cyan: #00DDFF;
+            --blue: #0049B7;
+            --blue-dark: #002a7a;
+            --white: #ffffff;
+            --text: #1a1a2e;
+            --text-muted: #6b6b8a;
+            --border: rgba(0, 0, 0, 0.07);
+            --radius: 22px;
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.09);
+            --shadow-hover: 0 14px 44px rgba(0, 0, 0, 0.16);
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #f7f7fb;
+            min-height: 100vh;
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── NAV ── */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .nav-logo {
+            font-family: 'Baloo 2', sans-serif;
+            font-weight: 800;
+            font-size: 28px;
+            line-height: 1;
+            display: flex;
+            align-items: baseline;
+            text-decoration: none;
+        }
+
+        .nav-logo .l1 {
+            background: linear-gradient(135deg, #FF1D58, #F75990);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-logo .l2 {
+            background: linear-gradient(135deg, #F75990, #ff8cb8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-logo .l3 {
+            background: linear-gradient(135deg, #ffe033, #FFF685);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-logo .l4 {
+            background: linear-gradient(135deg, #FFF685, #00DDFF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-logo .l5 {
+            background: linear-gradient(135deg, #00DDFF, #0049B7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-logo .l6 {
+            background: linear-gradient(135deg, #0049B7, #002a7a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
+            padding: 8px 14px;
+            border-radius: 10px;
+            transition: background 0.2s, color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-links a:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--text);
+        }
+
+        .nav-dropdown {
+            position: relative;
+        }
+
+        .nav-dropdown>a {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .nav-dropdown>a .chevron {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: transform 0.2s;
+        }
+
+        .nav-dropdown:hover>a .chevron {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%) translateY(-6px);
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            min-width: 180px;
+            padding: 8px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.18s, transform 0.18s;
+        }
+
+        .nav-dropdown:hover .dropdown-menu {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .dropdown-menu a {
+            display: flex !important;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 12px !important;
+            border-radius: 8px;
+            color: var(--text-muted) !important;
+            font-size: 13px !important;
+            white-space: nowrap;
+        }
+
+        .dropdown-menu a:hover {
+            background: rgba(0, 0, 0, 0.04) !important;
+            color: var(--text) !important;
+        }
+
+        .dropdown-menu a .di {
+            font-size: 16px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .profile-trigger {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 10px 5px 5px;
+            border-radius: 50px;
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .profile-trigger:hover {
+            background: rgba(0, 0, 0, 0.07);
+        }
+
+        .nav-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF1D58, #0049B7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 13px;
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(255, 29, 88, 0.25);
+            flex-shrink: 0;
+        }
+
+        .profile-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .profile-trigger .chevron {
+            width: 13px;
+            height: 13px;
+            stroke: var(--text-muted);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: transform 0.2s;
+        }
+
+        .profile-dropdown:hover .profile-trigger .chevron {
+            transform: rotate(180deg);
+        }
+
+        .profile-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            min-width: 160px;
+            padding: 8px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.18s, transform 0.18s;
+            transform: translateY(-6px);
+        }
+
+        .profile-dropdown:hover .profile-menu {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateY(0);
+        }
+
+        .profile-menu a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 500;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .profile-menu a:hover {
+            background: rgba(0, 0, 0, 0.04);
+            color: var(--text);
+        }
+
+        .profile-menu .signout {
+            color: var(--red);
+        }
+
+        .profile-menu .signout:hover {
+            background: rgba(255, 29, 88, 0.06);
+            color: var(--red);
+        }
+
+        .profile-menu .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 6px 0;
+        }
+
+        /* ── HERO BANNER ── */
+        .hero-banner {
+            background: linear-gradient(135deg, #FF1D58 0%, #F75990 38%, #0049B7 100%);
+            padding: 48px 28px 56px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-banner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 80% 20%, rgba(0, 221, 255, 0.38) 0%, transparent 50%),
+                radial-gradient(circle at 8% 88%, rgba(255, 224, 51, 0.32) 0%, transparent 45%);
+            pointer-events: none;
+        }
+
+        .hero-banner::after {
+            content: '✦';
+            position: absolute;
+            right: 64px;
+            top: 24px;
+            font-size: 130px;
+            opacity: 0.07;
+            color: white;
+            line-height: 1;
+            pointer-events: none;
+            animation: spinStar 32s linear infinite;
+        }
+
+        @keyframes spinStar {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .hero-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            padding: 5px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.92);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+        }
+
+        .hero-eyebrow .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--yellow);
+            display: inline-block;
+        }
+
+        .hero-title {
+            font-family: 'Baloo 2', sans-serif;
+            font-weight: 800;
+            font-size: clamp(30px, 5vw, 50px);
+            color: white;
+            line-height: 1.1;
+            margin-bottom: 12px;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .hero-title .wave {
+            display: inline-block;
+            animation: wave 1.8s ease-in-out infinite;
+            transform-origin: 70% 70%;
+        }
+
+        @keyframes wave {
+
+            0%,
+            100% {
+                transform: rotate(0)
+            }
+
+            20% {
+                transform: rotate(20deg)
+            }
+
+            40% {
+                transform: rotate(-8deg)
+            }
+
+            60% {
+                transform: rotate(14deg)
+            }
+
+            80% {
+                transform: rotate(-4deg)
+            }
+        }
+
+        .hero-sub {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.82);
+            line-height: 1.65;
+            max-width: 460px;
+        }
+
+        /* ── COLOURFUL STAT PILLS ── */
+        .stats-row {
+            max-width: 1100px;
+            margin: -22px auto 0;
+            padding: 0 28px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 2;
+        }
+
+        .stat-pill {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 12px 20px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
+            cursor: default;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 2px solid rgba(255, 255, 255, 0.35);
+        }
+
+        .stat-pill:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+        }
+
+        .stat-pill .stat-icon {
+            font-size: 16px;
+        }
+
+        .stat-pill .stat-val {
+            font-family: 'Baloo 2', sans-serif;
+            font-weight: 800;
+            font-size: 16px;
+        }
+
+        .stat-pill .stat-label {
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        .sp-red {
+            background: linear-gradient(135deg, #FF1D58, #F75990);
+        }
+
+        .sp-blue {
+            background: linear-gradient(135deg, #0049B7, #00DDFF);
+        }
+
+        .sp-yellow {
+            background: linear-gradient(135deg, #ffe033, #ffaa00);
+        }
+
+        .sp-cyan {
+            background: linear-gradient(135deg, #00b4d8, #0049B7);
+        }
+
+        /* ── SECTION HEADER ── */
+        .section-wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 44px 28px 0;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        /* ── ACTION CARDS ── */
+        .action-grid {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 28px 44px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .action-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .action-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .profile-name {
+                display: none;
+            }
+        }
+
+        .action-card {
+            border-radius: var(--radius);
+            padding: 30px 26px 26px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.24s cubic-bezier(.22, .68, 0, 1.2), box-shadow 0.24s ease;
+            box-shadow: 0 6px 28px rgba(0, 0, 0, 0.18);
+        }
+
+        .action-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0);
+            transition: background 0.2s;
+            pointer-events: none;
+        }
+
+        .action-card:hover {
+            transform: translateY(-7px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22);
+        }
+
+        .action-card:hover::after {
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .action-card .blob {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.13);
+            right: -35px;
+            bottom: -35px;
+            pointer-events: none;
+            transition: transform 0.3s;
+        }
+
+        .action-card .blob2 {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            left: -20px;
+            top: -20px;
+            pointer-events: none;
+        }
+
+        .action-card:hover .blob {
+            transform: scale(1.2);
+        }
+
+        .card-icon-wrap {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 27px;
+            background: rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(6px);
+            border: 1.5px solid rgba(255, 255, 255, 0.32);
+            flex-shrink: 0;
+            transition: transform 0.24s cubic-bezier(.22, .68, 0, 1.2);
+            position: relative;
+            z-index: 1;
+        }
+
+        .action-card:hover .card-icon-wrap {
+            transform: scale(1.12) rotate(-4deg);
+        }
+
+        .card-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-title {
+            font-family: 'Baloo 2', sans-serif;
+            font-weight: 700;
+            font-size: 19px;
+            color: white;
+            margin-bottom: 6px;
+            line-height: 1.15;
+        }
+
+        .card-desc {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.82);
+            line-height: 1.55;
+        }
+
+        .card-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 13px;
+            font-weight: 700;
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1.5px solid rgba(255, 255, 255, 0.32);
+            border-radius: 50px;
+            padding: 7px 16px;
+            width: fit-content;
+            transition: gap 0.18s, background 0.18s;
+            position: relative;
+            z-index: 1;
+        }
+
+        .action-card:hover .card-cta {
+            gap: 11px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .card-cta svg {
+            width: 13px;
+            height: 13px;
+            stroke: white;
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .card-add-friend {
+            background: linear-gradient(135deg, #FF1D58 0%, #F75990 55%, #ff8cb8 100%);
+        }
+
+        .card-create-group {
+            background: linear-gradient(135deg, #0049B7 0%, #006bff 55%, #00DDFF 100%);
+        }
+
+        .card-view-outings {
+            background: linear-gradient(135deg, #ffe033 0%, #ffaa00 55%, #ff6b35 100%);
+        }
+
+        /* ── ACTIVITY ── */
+        .activity-wrap {
+            max-width: 1100px;
+            margin: 0 auto 56px;
+            padding: 0 28px;
+        }
+
+        .activity-title {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+        }
+
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 20px;
+            background: white;
+            border-radius: 16px;
+            border-left: 4px solid var(--item-accent, #FF1D58);
+            box-shadow: var(--shadow);
+            transition: transform 0.18s, box-shadow 0.18s;
+            cursor: pointer;
+        }
+
+        .activity-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 6px 28px rgba(0, 0, 0, 0.1);
+        }
+
+        .activity-av {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .activity-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .activity-text {
+            font-size: 13.5px;
+            font-weight: 500;
+            color: var(--text);
+            line-height: 1.4;
+        }
+
+        .activity-time {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .activity-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 50px;
+            flex-shrink: 0;
+            color: white;
+        }
+
+        .badge-friend {
+            background: linear-gradient(135deg, #FF1D58, #F75990);
+        }
+
+        .badge-group {
+            background: linear-gradient(135deg, #0049B7, #00DDFF);
+        }
+
+        .badge-outing {
+            background: linear-gradient(135deg, #ffe033, #ffaa00);
+            color: #5a3500;
+        }
+
+        .badge-suggest {
+            background: linear-gradient(135deg, #00b4d8, #0049B7);
+        }
+
+        .ai-red {
+            --item-accent: #FF1D58;
+        }
+
+        .ai-blue {
+            --item-accent: #0049B7;
+        }
+
+        .ai-yellow {
+            --item-accent: #ffe033;
+        }
+
+        .ai-cyan {
+            --item-accent: #00DDFF;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAV -->
+    <nav>
+        <a href="#" class="nav-logo">
+            <span class="l1">S</span><span class="l2">h</span><span class="l3">e</span><span class="l4">l</span><span
+                class="l5">a</span><span class="l6">h</span>
+        </a>
+
+        <div class="nav-links">
+            <a href="#" onclick="goTo('quick-actions');return false;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <line x1="19" y1="8" x2="19" y2="14" />
+                    <line x1="16" y1="11" x2="22" y2="11" />
+                </svg>
+                Add Friend
+            </a>
+            <a href="#" onclick="goTo('quick-actions');return false;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                Create Group
+            </a>
+            <div class="nav-dropdown">
+                <a href="#">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    Outings
+                    <svg class="chevron" viewBox="0 0 24 24">
+                        <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                </a>
+                <div class="dropdown-menu">
+                    <a href="#"><span class="di">🗓️</span> My Outings</a>
+                    <a href="#"><span class="di">🔍</span> Browse Plans</a>
+                    <a href="#"><span class="di">📍</span> Nearby Spots</a>
+                    <a href="#"><span class="di">🏆</span> Top Rated</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-right">
+            <div class="profile-dropdown">
+                <div class="profile-trigger">
+                    <div class="nav-avatar">M</div>
+                    <span class="profile-name">Mariam</span>
+                    <svg class="chevron" viewBox="0 0 24 24">
+                        <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                </div>
+                <div class="profile-menu">
+                    <a href="#">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                        My Profile
+                    </a>
+                    <a href="#">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3" />
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
+                        </svg>
+                        Settings
+                    </a>
+                    <div class="divider"></div>
+                    <a href="#" class="signout">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        Sign Out
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <div class="hero-banner">
+        <div class="hero-inner">
+            <div class="hero-eyebrow"><span class="dot"></span> Friday, May 1 · Good evening</div>
+            <h1 class="hero-title">Welcome back, Mariam! <span class="wave">👋</span></h1>
+            <p class="hero-sub">Ready to plan your next outing? Add friends, create a group, or browse what's happening
+                near you.</p>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+        <div class="stat-pill sp-red">
+            <span class="stat-icon">👥</span>
+            <span class="stat-val">12</span>
+            <span class="stat-label">Friends</span>
+        </div>
+        <div class="stat-pill sp-blue">
+            <span class="stat-icon">🫂</span>
+            <span class="stat-val">3</span>
+            <span class="stat-label">Groups</span>
+        </div>
+        <div class="stat-pill sp-yellow">
+            <span class="stat-icon">🗓️</span>
+            <span class="stat-val">2</span>
+            <span class="stat-label">Upcoming outings</span>
+        </div>
+        <div class="stat-pill sp-cyan">
+            <span class="stat-icon">🔔</span>
+            <span class="stat-val">1</span>
+            <span class="stat-label">Invite pending</span>
+        </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="section-wrap">
+        <div class="section-label">Quick Actions</div>
+    </div>
+
+    <div class="action-grid" id="quick-actions">
+
+        <a href="#" class="action-card card-add-friend" onclick="return false;">
+            <div class="blob"></div>
+            <div class="blob2"></div>
+            <div class="card-icon-wrap">👤</div>
+            <div class="card-content">
+                <div class="card-title">Add Friend</div>
+                <div class="card-desc">Invite someone by name or link and start planning outings together.</div>
+            </div>
+            <div class="card-cta">Add a friend <svg viewBox="0 0 24 24">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                </svg></div>
+        </a>
+
+        <a href="#" class="action-card card-create-group" onclick="return false;">
+            <div class="blob"></div>
+            <div class="blob2"></div>
+            <div class="card-icon-wrap">🫂</div>
+            <div class="card-content">
+                <div class="card-title">Create New Group</div>
+                <div class="card-desc">Bring your crew together — name your group and add members to start voting on
+                    plans.</div>
+            </div>
+            <div class="card-cta">Start a group <svg viewBox="0 0 24 24">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                </svg></div>
+        </a>
+
+        <a href="#" class="action-card card-view-outings" onclick="return false;">
+            <div class="blob"></div>
+            <div class="blob2"></div>
+            <div class="card-icon-wrap">🗺️</div>
+            <div class="card-content">
+                <div class="card-title">View Outings</div>
+                <div class="card-desc">Browse upcoming plans, explore trending spots, or check your saved favorites.
+                </div>
+            </div>
+            <div class="card-cta">Explore outings <svg viewBox="0 0 24 24">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                </svg></div>
+        </a>
+
+    </div>
+
+    <!-- ACTIVITY -->
+    <div class="activity-wrap">
+        <div class="activity-title">Recent Activity</div>
+        <div class="activity-list">
+
+            <div class="activity-item ai-red">
+                <div class="activity-av" style="background:linear-gradient(135deg,#fff0f4,#ffd6e3);">🎉</div>
+                <div class="activity-body">
+                    <div class="activity-text"><strong>Layla</strong> accepted your friend request</div>
+                    <div class="activity-time">2 minutes ago</div>
+                </div>
+                <span class="activity-badge badge-friend">New friend</span>
+            </div>
+
+            <div class="activity-item ai-blue">
+                <div class="activity-av" style="background:linear-gradient(135deg,#edf3ff,#c8d9ff);">👥</div>
+                <div class="activity-body">
+                    <div class="activity-text"><strong>Karim</strong> added you to <strong>Weekend Squad</strong></div>
+                    <div class="activity-time">1 hour ago</div>
+                </div>
+                <span class="activity-badge badge-group">Group invite</span>
+            </div>
+
+            <div class="activity-item ai-yellow">
+                <div class="activity-av" style="background:linear-gradient(135deg,#fffbe6,#ffe99a);">📍</div>
+                <div class="activity-body">
+                    <div class="activity-text">Your group voted on <strong>Karaoke Night 🎤</strong> — it's happening
+                        Friday!</div>
+                    <div class="activity-time">3 hours ago</div>
+                </div>
+                <span class="activity-badge badge-outing">Outing locked</span>
+            </div>
+
+            <div class="activity-item ai-cyan">
+                <div class="activity-av" style="background:linear-gradient(135deg,#e0f9ff,#a8eeff);">🌟</div>
+                <div class="activity-body">
+                    <div class="activity-text"><strong>Maya</strong> suggested <strong>Rooftop Dinner</strong> for your
+                        next outing</div>
+                    <div class="activity-time">Yesterday</div>
+                </div>
+                <span class="activity-badge badge-suggest">Suggestion</span>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function goTo(id) { document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    </script>
+</body>
+
+</html>

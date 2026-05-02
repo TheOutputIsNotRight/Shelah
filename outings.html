@@ -1,56 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="View all your planned outings with friends.">
-  <title>Your Outings — Shelah</title>
+  <meta name="description" content="View all your planned groups and outings with friends.">
+  <title>Your Groups — Shelah</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
+
 <body>
-<nav class="nav"><div class="container"><a href="/" class="nav-brand"><span>🎉</span> Shelah</a><div id="nav-user"></div></div></nav>
+  <nav class="nav">
+    <div class="container"><a href="/" class="nav-brand"><span>🎉</span> Shelah</a>
+      <div id="nav-user"></div>
+    </div>
+  </nav>
 
-<main class="container" style="padding-bottom:48px">
-  <div class="page-header">
-    <h1>🗓️ Your Outings</h1>
-    <a href="/create-outing.html" class="btn btn-accent">+ Create New Outing</a>
-  </div>
+  <main class="container" style="padding-bottom:48px">
+    <div class="page-header">
+      <h1>🗓️ Your Groups</h1>
+      <a href="/create-outing.html" class="btn btn-accent">+ Create New Group</a>
+    </div>
 
-  <div id="outings-container">
-    <div class="skeleton" style="height:80px;margin-bottom:12px"></div>
-    <div class="skeleton" style="height:80px;margin-bottom:12px"></div>
-    <div class="skeleton" style="height:80px"></div>
-  </div>
-</main>
+    <div style="margin-bottom: 24px; position: relative;">
+      <button class="btn btn-primary" onclick="const el = document.getElementById('confirmed-dropdown'); el.style.display = el.style.display === 'none' ? 'block' : 'none'">Confirmed Outings ▼</button>
+      <div id="confirmed-dropdown" style="display: none; position: absolute; top: 100%; left: 0; margin-top: 8px; background: var(--bg-card); border: 1px solid var(--border); padding: 16px; border-radius: 12px; width: 100%; max-width: 400px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+         <div id="confirmed-outings-container">
+           <p style="color:var(--text-secondary);text-align:center;">Loading...</p>
+         </div>
+      </div>
+    </div>
 
-<script src="/js/api.js"></script>
-<script src="/js/auth.js"></script>
-<script>
-  async function onAuthReady() {
-    if (!requireAuth()) return;
-    await loadOutings();
-  }
+    <h3 class="section-title" style="margin-bottom:16px">All Groups</h3>
+    <div id="outings-container">
+      <div class="skeleton" style="height:80px;margin-bottom:12px"></div>
+      <div class="skeleton" style="height:80px;margin-bottom:12px"></div>
+      <div class="skeleton" style="height:80px"></div>
+    </div>
+  </main>
 
-  async function loadOutings() {
-    const container = document.getElementById('outings-container');
-    try {
-      const data = await getOutings();
-      if (!data.outings.length) {
-        container.innerHTML = `<div class="empty-state">
-          <span class="icon">🎯</span>
-          <div class="title">No outings yet!</div>
-          <p>Create your first outing and invite friends.</p>
-          <a href="/create-outing.html" class="btn btn-primary" style="margin-top:16px">Create Outing</a>
-        </div>`;
-        return;
-      }
-      container.innerHTML = data.outings.map(o => {
-        const typeCls = { open:'pill-open', closed:'pill-closed', restricted:'pill-restricted' }[o.outing_type] || '';
-        const typeLabel = { open:'🌐 Open', closed:'🔒 Closed', restricted:'🔑 Restricted' }[o.outing_type] || o.outing_type;
-        const avatars = (o.members_preview||[]).map(m => avatarHtml(m.display_name, 32)).join('');
-        const extra = o.member_count > 4 ? `<div class="avatar avatar-more" style="width:32px;height:32px;font-size:0.7rem">+${o.member_count-4}</div>` : '';
-        const statusIcons = (o.invite_status==='accepted'?'✅':'⏳') + ' ' + (o.requirements_submitted?'📋':'❓');
-        return `<div class="outing-card" onclick="window.location.href='/outing.html?id=${o.id}'">
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    async function onAuthReady() {
+      if (!requireAuth()) return;
+      await loadOutings();
+    }
+
+    async function loadOutings() {
+      const container = document.getElementById('outings-container');
+      const confirmedContainer = document.getElementById('confirmed-outings-container');
+      try {
+        const data = await getOutings();
+
+        const renderCard = (o) => {
+          const typeCls = { open: 'pill-open', closed: 'pill-closed', restricted: 'pill-restricted' }[o.outing_type] || '';
+          const typeLabel = { open: '🌐 Open', closed: '🔒 Closed', restricted: '🔑 Restricted' }[o.outing_type] || o.outing_type;
+          const avatars = (o.members_preview || []).map(m => avatarHtml(m.display_name, 32)).join('');
+          const extra = o.member_count > 4 ? `<div class="avatar avatar-more" style="width:32px;height:32px;font-size:0.7rem">+${o.member_count - 4}</div>` : '';
+          const statusIcons = (o.invite_status === 'accepted' ? '✅' : '⏳') + ' ' + (o.requirements_submitted ? '📋' : '❓');
+          return `<div class="outing-card" onclick="window.location.href='/outing.html?id=${o.id}'">
           <div class="outing-card-info">
             <div class="outing-card-name">${escapeHtml(o.name)}</div>
             <div class="outing-card-date">${formatDate(o.scheduled_date)}</div>
@@ -61,11 +70,35 @@
             <span style="font-size:0.85rem">${statusIcons}</span>
           </div>
         </div>`;
-      }).join('');
-    } catch (err) {
-      container.innerHTML = '<div class="empty-state"><span class="icon">⚠️</span><p>Failed to load outings</p></div>';
+        };
+
+        if (!data.outings.length) {
+          container.innerHTML = `<div class="empty-state">
+          <span class="icon">🎯</span>
+          <div class="title">No groups yet!</div>
+          <p>Create your first group and invite friends.</p>
+          <a href="/create-outing.html" class="btn btn-primary" style="margin-top:16px">Create Group</a>
+        </div>`;
+          if(confirmedContainer) confirmedContainer.innerHTML = '<p style="color:var(--text-secondary);text-align:center;">No confirmed outings yet.</p>';
+          return;
+        }
+
+        container.innerHTML = data.outings.map(renderCard).join('');
+
+        const confirmed = data.outings.filter(o => o.all_requirements_submitted);
+        if (confirmedContainer) {
+          if (confirmed.length === 0) {
+            confirmedContainer.innerHTML = '<p style="color:var(--text-secondary);text-align:center;">No confirmed outings yet.</p>';
+          } else {
+            confirmedContainer.innerHTML = confirmed.map(renderCard).join('');
+          }
+        }
+      } catch (err) {
+        container.innerHTML = '<div class="empty-state"><span class="icon">⚠️</span><p>Failed to load groups</p></div>';
+        if(confirmedContainer) confirmedContainer.innerHTML = '<p style="color:var(--error);text-align:center;">Failed to load</p>';
+      }
     }
-  }
-</script>
+  </script>
 </body>
+
 </html>
