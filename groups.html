@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="View all your planned outings with friends.">
-  <title>Your Outings — Shelah</title>
+  <meta name="description" content="View all your planned groups and outings with friends.">
+  <title>Your Groups — Shelah</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 
@@ -18,17 +18,15 @@
 
   <main class="container" style="padding-bottom:48px">
     <div class="page-header">
-      <h1>🗓️ Your Outings</h1>
+      <h1>🗓️ Your Groups</h1>
       <a href="/create-outing.html" class="btn btn-accent">+ Create New Group</a>
     </div>
 
-    <div style="margin-bottom: 24px; position: relative;">
-      <button class="btn btn-primary" onclick="const el = document.getElementById('confirmed-dropdown'); el.style.display = el.style.display === 'none' ? 'block' : 'none'">Confirmed Outings ▼</button>
-      <div id="confirmed-dropdown" style="display: none; position: absolute; top: 100%; left: 0; margin-top: 8px; background: var(--bg-card); border: 1px solid var(--border); padding: 16px; border-radius: 12px; width: 100%; max-width: 400px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
-         <div id="confirmed-outings-container">
-           <p style="color:var(--text-secondary);text-align:center;">Loading...</p>
-         </div>
-      </div>
+
+    <div id="outings-container">
+      <div class="skeleton" style="height:80px;margin-bottom:12px"></div>
+      <div class="skeleton" style="height:80px;margin-bottom:12px"></div>
+      <div class="skeleton" style="height:80px"></div>
     </div>
   </main>
 
@@ -41,7 +39,7 @@
     }
 
     async function loadOutings() {
-      const confirmedContainer = document.getElementById('confirmed-outings-container');
+      const container = document.getElementById('outings-container');
       try {
         const data = await getOutings();
 
@@ -65,20 +63,18 @@
         };
 
         if (!data.outings.length) {
-          if(confirmedContainer) confirmedContainer.innerHTML = '<p style="color:var(--text-secondary);text-align:center;">No confirmed outings yet.</p>';
+          container.innerHTML = `<div class="empty-state">
+          <span class="icon">🎯</span>
+          <div class="title">No groups yet!</div>
+          <p>Create your first group and invite friends.</p>
+          <a href="/create-outing.html" class="btn btn-primary" style="margin-top:16px">Create Group</a>
+        </div>`;
           return;
         }
 
-        const confirmed = data.outings.filter(o => o.all_requirements_submitted);
-        if (confirmedContainer) {
-          if (confirmed.length === 0) {
-            confirmedContainer.innerHTML = '<p style="color:var(--text-secondary);text-align:center;">No confirmed outings yet.</p>';
-          } else {
-            confirmedContainer.innerHTML = confirmed.map(renderCard).join('');
-          }
-        }
+        container.innerHTML = data.outings.map(renderCard).join('');
       } catch (err) {
-        if(confirmedContainer) confirmedContainer.innerHTML = '<p style="color:var(--error);text-align:center;">Failed to load</p>';
+        container.innerHTML = '<div class="empty-state"><span class="icon">⚠️</span><p>Failed to load groups</p></div>';
       }
     }
   </script>
