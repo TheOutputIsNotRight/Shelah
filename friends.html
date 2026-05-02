@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shelah — Add Friend</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    .hero-banner::after{content:'🫂';position:absolute;right:60px;top:8px;font-size:118px;opacity:.1;line-height:1;pointer-events:none;animation:floatG 6s ease-in-out infinite}
+    .page-body{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+    .invite-section{padding:22px 26px 26px}
+    .invite-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px}
+    .link-box{display:flex;align-items:center;border:1.5px solid rgba(0,73,183,.2);border-radius:13px;overflow:hidden;background:#f0f4ff;margin-bottom:16px}
+    .link-icon{padding:0 10px 0 14px;font-size:15px}
+    .link-input{flex:1;padding:12px 8px;background:transparent;border:none;outline:none;font-size:13px;font-weight:500;color:var(--blue);font-family:'DM Sans',sans-serif}
+    .link-copy-btn{padding:9px 16px;background:linear-gradient(135deg,#0049B7,#00DDFF);color:white;font-size:12.5px;font-weight:700;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .18s;flex-shrink:0;margin:4px;border-radius:9px;display:flex;align-items:center;gap:6px}
+    .link-copy-btn:hover{opacity:.88}
+    .link-copy-btn.copied{background:linear-gradient(135deg,#10B981,#00b09b)}
+    .invite-actions{display:flex;gap:10px;margin-bottom:18px}
+    .action-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:11px 16px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;color:white;transition:transform .2s,opacity .2s}
+    .action-btn:hover{transform:translateY(-2px);opacity:.9}
+    .btn-share{background:linear-gradient(135deg,#FF1D58,#F75990)}
+    .btn-whatsapp{background:linear-gradient(135deg,#25D366,#128C7E)}
+    .divider-row{display:flex;align-items:center;gap:14px;margin:18px 0}
+    .divider-line{flex:1;height:1px;background:var(--border)}
+    .divider-txt{font-size:12px;color:var(--text-muted);white-space:nowrap;font-weight:500}
+    .search-wrap{position:relative}
+    .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none}
+    .search-icon svg{width:16px;height:16px;stroke:var(--text-muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .search-input{width:100%;padding:13px 14px 13px 42px;border:1.5px solid var(--border);border-radius:13px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);background:white;outline:none;transition:border-color .2s,box-shadow .2s}
+    .search-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,73,183,.1)}
+    .search-results{margin-top:10px}
+    .search-user{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;transition:background .15s;cursor:default}
+    .search-user:hover{background:#f0f4ff}
+    .su-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:white;flex-shrink:0;font-family:'Baloo 2',sans-serif;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+    .su-info{flex:1;min-width:0}
+    .su-name{font-size:14px;font-weight:600;color:var(--text)}
+    .su-handle{font-size:12px;color:var(--text-muted)}
+    .su-add{padding:6px 14px;border-radius:50px;background:linear-gradient(135deg,#FF1D58,#F75990);color:white;font-size:12px;font-weight:700;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .18s,transform .18s}
+    .su-add:hover{opacity:.88;transform:scale(1.05)}
+    .su-add.added{background:linear-gradient(135deg,#10B981,#00b09b);pointer-events:none}
+    .no-results{padding:20px;text-align:center;color:var(--text-muted);font-size:13px}
+    .pending-item{display:flex;align-items:center;gap:12px;padding:13px 20px;border-bottom:1px solid var(--border);transition:background .15s}
+    .pending-item:last-child{border-bottom:none}
+    .pending-item:hover{background:#f7f7fb}
+    .pending-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:white;font-family:'Baloo 2',sans-serif;flex-shrink:0}
+    .pending-info{flex:1}
+    .pending-name{font-size:13.5px;font-weight:600;color:var(--text)}
+    .pending-time{font-size:11.5px;color:var(--text-muted)}
+    .pending-actions{display:flex;gap:6px}
+    .pend-btn{padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:opacity .18s,transform .18s}
+    .pend-btn:hover{opacity:.85;transform:scale(1.05)}
+    .pend-accept{background:linear-gradient(135deg,#FF1D58,#F75990);color:white}
+    .pend-decline{background:rgba(0,0,0,.06);color:var(--text-muted)}
+    .friends-card{max-height:600px;display:flex;flex-direction:column}
+    .friends-body{flex:1;overflow-y:auto;padding:0}
+    .friend-item{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--border);transition:background .15s}
+    .friend-item:last-child{border-bottom:none}
+    .friend-item:hover{background:#f7f7fb}
+    .friend-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;color:white;font-family:'Baloo 2',sans-serif;border:2.5px solid white;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+    .friend-name{font-size:14px;font-weight:600;color:var(--text)}
+    .friends-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .friends-count{font-size:12px;color:var(--text-muted)}
+    .friends-count strong{color:var(--text);font-weight:600}
+    .toast-fixed{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a1a2e;color:white;padding:12px 22px;border-radius:50px;font-size:13.5px;font-weight:600;box-shadow:0 8px 32px rgba(0,0,0,.25);transition:transform .35s cubic-bezier(.22,.68,0,1.2),opacity .3s;opacity:0;z-index:9999;pointer-events:none;display:flex;align-items:center;gap:8px}
+    .toast-fixed.show{transform:translateX(-50%) translateY(0);opacity:1}
+    @media(max-width:700px){.page-body{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a href="/" class="nav-logo"><span class="l1">S</span><span class="l2">h</span><span class="l3">e</span><span class="l4">l</span><span class="l5">a</span><span class="l6">h</span></a>
+    <div class="nav-links">
+      <a href="/friends.html" class="active"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>Add Friend</a>
+      <a href="/create-outing.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Create Group</a>
+      <a href="/outings.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Outings</a>
+    </div>
+    <div class="nav-right" id="nav-user"></div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero-banner">
+    <div class="hero-inner">
+      <div class="hero-eyebrow"><span class="dot"></span> Add Friend</div>
+      <h1 class="hero-title">Grow your squad 🫂</h1>
+      <p class="hero-sub">Share your invite link or search by name to add friends and start planning unforgettable outings together.</p>
+    </div>
+  </div>
+
+  <!-- PAGE BODY -->
+  <div class="page-body">
+
+    <!-- LEFT COLUMN -->
+    <div style="display:flex;flex-direction:column;gap:24px">
+
+      <!-- INVITE LINK CARD -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-icon" style="background:linear-gradient(135deg,#FF1D58,#F75990)">🔗</div>
+          <div class="card-header-text"><h2>Your Invite Link</h2><p>Anyone with this link can send you a friend request</p></div>
+        </div>
+        <div class="invite-section">
+          <div class="invite-label">Your personal link</div>
+          <div class="link-box">
+            <div class="link-icon">🔗</div>
+            <input class="link-input" id="inviteLink" type="text" readonly placeholder="Loading...">
+            <button class="link-copy-btn" id="copyBtn" onclick="copyLink()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+          </div>
+          <div class="divider-row"><div class="divider-line"></div><span class="divider-txt">or add by email</span><div class="divider-line"></div></div>
+          <div class="search-wrap">
+            <div class="search-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+            <input class="search-input" type="email" placeholder="Enter friend's email address..." id="searchInput">
+          </div>
+          <div style="margin-top:10px"><button class="btn btn-accent btn-block" onclick="handleAddByEmail()">Send Friend Request</button></div>
+        </div>
+      </div>
+
+      <!-- PENDING REQUESTS -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-icon" style="background:linear-gradient(135deg,#0049B7,#00DDFF)">⏳</div>
+          <div class="card-header-text"><h2>Pending Requests</h2><p>People who want to join your squad</p></div>
+        </div>
+        <div id="pendingList"><div class="empty-state"><span class="icon">✨</span><div class="title">No pending requests</div></div></div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: FRIENDS LIST -->
+    <div class="card friends-card">
+      <div class="card-header">
+        <div class="card-header-icon" style="background:linear-gradient(135deg,#ffe033,#ffaa00)">👥</div>
+        <div class="card-header-text"><h2>Your Friends</h2><p id="friendsSubtitle">Loading...</p></div>
+      </div>
+      <div class="friends-body" id="friendsList"><div class="empty-state"><span class="icon">👥</span><div class="title">Loading friends...</div></div></div>
+      <div class="friends-footer">
+        <span class="friends-count" id="friendsCount"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast-fixed" id="toast"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    function onAuthReady() { if (!requireAuth()) return; loadInviteLink(); loadPendingRequests(); loadFriends(); }
+
+    async function loadInviteLink() {
+      try {
+        const data = await getInviteLink();
+        document.getElementById('inviteLink').value = window.location.origin + '/invite.html?code=' + data.invite_code;
+      } catch(e) {}
+    }
+
+    function copyLink() {
+      const val = document.getElementById('inviteLink').value;
+      navigator.clipboard.writeText(val).catch(()=>{});
+      const btn = document.getElementById('copyBtn');
+      btn.classList.add('copied');
+      btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+      showPageToast('✅ Invite link copied!');
+      setTimeout(()=>{
+        btn.classList.remove('copied');
+        btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy';
+      }, 2500);
+    }
+
+    async function handleAddByEmail() {
+      const email = document.getElementById('searchInput').value.trim();
+      if (!email) { showPageToast('⚠️ Please enter an email'); return; }
+      try {
+        const data = await addFriend(email);
+        document.getElementById('searchInput').value = '';
+        showPageToast('🎉 ' + (data.message || 'Friend request sent!'));
+      } catch(e) { showPageToast('❌ ' + (e.error || 'Failed to send request')); }
+    }
+
+    async function loadPendingRequests() {
+      const container = document.getElementById('pendingList');
+      try {
+        const data = await getFriendRequests();
+        if (!data.requests || !data.requests.length) {
+          container.innerHTML = '<div class="empty-state"><span class="icon">✨</span><div class="title">No pending requests</div></div>';
+          return;
+        }
+        container.innerHTML = data.requests.map(r => {
+          const initial = (r.display_name||'?')[0].toUpperCase();
+          const color = getAvatarColor(r.display_name);
+          return `<div class="pending-item" id="pend-${r.friendship_id}">
+            <div class="pending-avatar" style="background:${color}">${initial}</div>
+            <div class="pending-info"><div class="pending-name">${escapeHtml(r.display_name)}</div><div class="pending-time">Friend request</div></div>
+            <div class="pending-actions">
+              <button class="pend-btn pend-accept" onclick="handleRespond('${r.friendship_id}','accept','${escapeHtml(r.display_name)}')">Accept</button>
+              <button class="pend-btn pend-decline" onclick="handleRespond('${r.friendship_id}','decline')">Decline</button>
+            </div>
+          </div>`;
+        }).join('');
+      } catch(e) { container.innerHTML = '<div class="empty-state"><span class="icon">⚠️</span><div class="title">Could not load requests</div></div>'; }
+    }
+
+    async function handleRespond(id, action, name) {
+      try {
+        await respondFriendRequest(id, action);
+        const item = document.getElementById('pend-'+id);
+        if (item) { item.style.transition='opacity .3s,transform .3s'; item.style.opacity='0'; item.style.transform='translateX(20px)'; setTimeout(()=>item.remove(),300); }
+        if (action === 'accept') { showPageToast('🎉 You and '+name+' are now friends!'); loadFriends(); }
+        else showPageToast('Request declined');
+      } catch(e) { showPageToast('❌ Failed'); }
+    }
+
+    async function loadFriends() {
+      const container = document.getElementById('friendsList');
+      try {
+        const data = await getFriends();
+        const friends = data.friends || [];
+        document.getElementById('friendsSubtitle').textContent = friends.length + ' friends in your squad';
+        document.getElementById('friendsCount').innerHTML = 'Showing <strong>'+friends.length+'</strong> friends';
+        if (!friends.length) {
+          container.innerHTML = '<div class="empty-state"><span class="icon">👥</span><div class="title">No friends yet</div><p style="color:var(--text-muted)">Share your invite link to get started!</p></div>';
+          return;
+        }
+        container.innerHTML = friends.map(f => {
+          const initial = (f.display_name||'?')[0].toUpperCase();
+          const color = getAvatarColor(f.display_name);
+          return `<div class="friend-item"><div class="friend-avatar" style="background:${color}">${initial}</div><div class="friend-name">${escapeHtml(f.display_name)}</div></div>`;
+        }).join('');
+      } catch(e) { container.innerHTML = '<div class="empty-state"><span class="icon">⚠️</span><div class="title">Could not load friends</div></div>'; }
+    }
+
+    let toastTimer;
+    function showPageToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=>t.classList.remove('show'), 2800);
+    }
+  </script>
+</body>
+</html>

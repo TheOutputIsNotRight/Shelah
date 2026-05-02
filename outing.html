@@ -3,501 +3,587 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="View outing details, set requirements, and vote on places.">
   <title>Outing — Shelah</title>
   <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    .hero-banner::after { content:'⛺'; position:absolute; right:60px; top:8px; font-size:118px; opacity:.1; line-height:1; pointer-events:none; animation:floatG 6s ease-in-out infinite; }
+    
+    .outing-dashboard { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
+    
+    /* Stats & Info */
+    .stat-block { display: flex; align-items: center; gap: 14px; padding: 16px; background: #f7f7fb; border-radius: 16px; margin-bottom: 12px; }
+    .sb-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .sb-info { flex: 1; }
+    .sb-label { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 2px; }
+    .sb-val { font-size: 15px; font-weight: 600; color: var(--text); }
+    
+    .desc-box { font-size: 14px; color: var(--text-muted); line-height: 1.6; padding: 16px; background: white; border: 1.5px dashed var(--border); border-radius: 16px; margin-bottom: 24px; }
+
+    /* Members List */
+    .member-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 16px; transition: background 0.2s; }
+    .member-item:hover { background: #f0f4ff; }
+    .mi-avatar { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: white; font-family: 'Baloo 2', sans-serif; flex-shrink: 0; }
+    .mi-info { flex: 1; }
+    .mi-name { font-size: 15px; font-weight: 600; color: var(--text); }
+    .mi-status { font-size: 12.5px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot-pending { background: #ffaa00; }
+    .dot-ready { background: #10B981; }
+
+    /* Requirements Modal */
+    .req-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .req-section { margin-bottom: 24px; }
+    .req-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 12px; }
+    .chips-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { padding: 10px 16px; border-radius: 50px; border: 2px solid var(--border); background: white; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; display: flex; align-items: center; gap: 8px; }
+    .chip:hover { border-color: var(--blue); }
+    .chip.active { background: rgba(0,73,183,0.06); border-color: var(--blue); color: var(--blue); }
+    
+    .map-container { height: 240px; border-radius: 16px; border: 2px solid var(--border); background: #f0f0f5; overflow: hidden; margin-bottom: 12px; }
+    
+    .slider-wrap { margin-top: 10px; }
+    .slider-wrap input[type=range] { width: 100%; -webkit-appearance: none; height: 8px; border-radius: 10px; background: var(--border); outline: none; }
+    .slider-wrap input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #0049B7; box-shadow: 0 4px 12px rgba(0,73,183,0.3); cursor: pointer; transition: transform 0.1s; }
+    .slider-wrap input[type=range]::-webkit-slider-thumb:active { transform: scale(1.15); }
+    .slider-label { font-size: 14px; font-weight: 700; color: var(--blue); text-align: center; margin-top: 12px; }
+
+    .star-picker { display: flex; gap: 8px; }
+    .star-picker .star { font-size: 32px; color: var(--border); cursor: pointer; transition: all 0.2s; line-height: 1; }
+    .star-picker .star.active { color: #ffaa00; text-shadow: 0 4px 12px rgba(255,170,0,0.3); }
+    .star-picker .star:hover { transform: scale(1.15); }
+
+    /* Empty state overrides */
+    .empty-state { text-align: center; padding: 40px 20px; }
+    .empty-state .icon { font-size: 48px; margin-bottom: 16px; display: block; }
+    .empty-state .title { font-family: 'Baloo 2', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+
+    /* Share box */
+    .share-box { display: flex; align-items: center; border: 1.5px solid rgba(0,73,183,.2); border-radius: 13px; overflow: hidden; background: #f0f4ff; margin-bottom: 16px; }
+    .share-box input { flex: 1; padding: 12px 14px; background: transparent; border: none; font-size: 13px; font-weight: 500; color: var(--blue); outline: none; }
+
+    /* Toast */
+    .toast-fixed { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1a1a2e; color: white; padding: 12px 22px; border-radius: 50px; font-size: 13.5px; font-weight: 600; box-shadow: 0 8px 32px rgba(0,0,0,.25); transition: transform .35s cubic-bezier(.22,.68,0,1.2), opacity .3s; opacity: 0; z-index: 9999; display: flex; align-items: center; gap: 8px; }
+    .toast-fixed.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    @media(max-width: 800px) {
+      .outing-dashboard { grid-template-columns: 1fr; }
+      .req-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-<nav class="nav"><div class="container"><a href="/" class="nav-brand"><span>🎉</span> Shelah</a><div id="nav-user"></div></div></nav>
 
-<main class="container" style="padding-bottom:48px">
-  <div id="loading-state">
-    <div class="skeleton" style="height:40px;width:60%;margin:32px 0 12px"></div>
-    <div class="skeleton" style="height:20px;width:40%"></div>
-    <div class="skeleton" style="height:200px;margin-top:24px"></div>
+  <!-- NAV -->
+  <nav class="nav">
+    <a href="/" class="nav-logo"><span class="l1">S</span><span class="l2">h</span><span class="l3">e</span><span class="l4">l</span><span class="l5">a</span><span class="l6">h</span></a>
+    <div class="nav-links">
+      <a href="/friends.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>Add Friend</a>
+      <a href="/create-outing.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Create Group</a>
+      <a href="/outings.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Outings</a>
+    </div>
+    <div class="nav-right" id="nav-user"></div>
+  </nav>
+
+  <div id="view-container">
+    <div style="padding:100px;text-align:center"><span class="spinner" style="display:inline-block;border-color:var(--blue);border-top-color:transparent;width:40px;height:40px"></span></div>
   </div>
-  <div id="restricted-view" style="display:none">
-    <div class="restricted-view">
-      <div class="lock">🔒</div>
-      <h2 id="restricted-name"></h2>
-      <p style="color:var(--text-secondary)">This is a private outing. You need to be invited.</p>
-      <a href="/" class="btn btn-primary" style="margin-top:20px">Back to Home</a>
+
+  <!-- INVITATION MODAL -->
+  <div class="modal-overlay" id="invite-modal">
+    <div class="modal">
+      <div class="modal-inner">
+        <h3 class="modal-title">👥 Invite Friends</h3>
+        <div id="invite-friends-list"><div class="empty-state"><span class="icon">⏳</span><div class="title">Loading friends...</div></div></div>
+        
+        <div id="pending-approvals-section" style="margin-top:32px;display:none;border-top:2px solid var(--border);padding-top:24px">
+          <h3 class="modal-title" style="font-size:16px">🗳️ Pending Join Requests</h3>
+          <div id="pending-approvals-list"></div>
+        </div>
+      </div>
     </div>
   </div>
-  <div id="invited-view" style="display:none"></div>
-  <div id="public-view" style="display:none"></div>
-  <div id="member-view" style="display:none"></div>
-</main>
 
-<!-- Invite Friend Modal -->
-<div class="modal-overlay" id="invite-modal">
-  <div class="modal modal-inner">
-    <h3 class="modal-title">👥 Invite a Friend</h3>
-    <div id="invite-friends-list"><div class="empty-state"><span class="icon">⏳</span><p>Loading...</p></div></div>
-    <div id="pending-approvals-section" style="margin-top:20px;display:none">
-      <h4 class="section-title">🗳️ Pending Approvals</h4>
-      <div id="pending-approvals-list"></div>
-    </div>
-  </div>
-</div>
-
-<!-- Requirements Modal -->
-<div class="modal-overlay" id="req-modal">
-  <div class="modal modal-full modal-inner">
-    <h3 class="modal-title">📋 Your Requirements</h3>
-    <div style="max-width:560px;margin:0 auto">
-      <div class="section">
-        <label class="form-label">📍 Your Location (Home)</label>
-        <div class="map-container" id="req-map"></div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button class="btn btn-outline btn-sm" onclick="useGPS()">📡 Use My GPS</button>
-          <span id="req-coords" style="font-size:0.82rem;color:var(--text-secondary)"></span>
-        </div>
-      </div>
-
-      <div class="section">
-        <label class="form-label">📏 Max Distance</label>
-        <div class="slider-wrap">
-          <input type="range" id="req-distance" min="1" max="50" value="25" oninput="updateSlider(this)">
-          <div class="slider-label" id="distance-label">Up to 25 km away</div>
-        </div>
-      </div>
-
-      <div class="section">
-        <label class="form-label">🔥 Popularity</label>
-        <div class="chips-grid">
-          <button class="chip active" data-pop="any" onclick="selectPop(this)">Any</button>
-          <button class="chip" data-pop="niche" onclick="selectPop(this)">🎭 Niche</button>
-          <button class="chip" data-pop="moderate" onclick="selectPop(this)">🏪 Moderate</button>
-          <button class="chip" data-pop="mainstream" onclick="selectPop(this)">🌟 Mainstream</button>
-        </div>
-      </div>
-
-      <div class="section">
-        <label class="form-label">⭐ Minimum Rating</label>
-        <div class="star-picker" id="star-picker">
-          <span class="star active" data-val="1" onclick="pickStar(1)">★</span>
-          <span class="star active" data-val="2" onclick="pickStar(2)">★</span>
-          <span class="star active" data-val="3" onclick="pickStar(3)">★</span>
-          <span class="star" data-val="4" onclick="pickStar(4)">★</span>
-          <span class="star" data-val="5" onclick="pickStar(5)">★</span>
-        </div>
-      </div>
-
-      <div class="section">
-        <label class="form-label">💰 Budget</label>
-        <div class="chips-grid">
-          <button class="chip active" data-budget="any" onclick="selectBudget(this)">Any</button>
-          <button class="chip" data-budget="budget" onclick="selectBudget(this)">💰 Budget</button>
-          <button class="chip" data-budget="moderate" onclick="selectBudget(this)">💰💰 Moderate</button>
-          <button class="chip" data-budget="upscale" onclick="selectBudget(this)">💰💰💰 Upscale</button>
-          <button class="chip" data-budget="luxury" onclick="selectBudget(this)">💰💰💰💰 Luxury</button>
-        </div>
-      </div>
-
-      <div class="section">
-        <label class="form-label">📍 Location Types</label>
-        <div class="chips-grid" id="location-types-grid"></div>
-      </div>
-
-      <button class="btn btn-primary btn-block btn-lg" id="save-req-btn" onclick="handleSaveReq()" style="margin-top:20px">Save Requirements</button>
-    </div>
-  </div>
-</div>
-
-<!-- Recommendations Modal -->
-<div class="modal-overlay" id="recs-modal">
-  <div class="modal modal-full modal-inner">
-    <h3 class="modal-title">🏆 Recommended Places</h3>
-    <div id="recs-count" style="color:var(--text-secondary);margin-bottom:16px"></div>
-    <div id="recs-container">
-      <div class="skeleton" style="height:100px;margin-bottom:12px"></div>
-      <div class="skeleton" style="height:100px;margin-bottom:12px"></div>
-    </div>
-  </div>
-</div>
-
-<script src="/js/api.js"></script>
-<script src="/js/auth.js"></script>
-<script src="/js/maps.js"></script>
-<script>
-  let outingId = new URLSearchParams(window.location.search).get('id');
-  let outingData = null;
-  let reqLat = null, reqLng = null;
-  let reqPopularity = 'any', reqMinRating = 3, reqBudget = 'any', reqLocationTypes = [];
-
-  async function onAuthReady() {
-    if (!outingId) { window.location.href = '/'; return; }
-    await loadOuting();
-  }
-
-  async function loadOuting() {
-    try {
-      const data = await getOuting(outingId);
-      outingData = data;
-      document.getElementById('loading-state').style.display = 'none';
-      renderOuting(data);
-    } catch (err) {
-      document.getElementById('loading-state').style.display = 'none';
-      if (err.status === 403) {
-        document.getElementById('restricted-view').style.display = 'block';
-        return;
-      }
-      if (err.status === 401 && outingData === null) {
-        // Not logged in, could be open outing
-        document.getElementById('public-view').style.display = 'block';
-        document.getElementById('public-view').innerHTML = `
-          <div class="restricted-view">
-            <div class="lock">🌐</div>
-            <h2>Sign in to view this outing</h2>
-            <p style="color:var(--text-secondary)">You need to be signed in to see outing details.</p>
-            <a href="/index.html?login=1" class="btn btn-primary" style="margin-top:20px">Sign In</a>
-          </div>`;
-        return;
-      }
-      showToast('Failed to load outing', 'error');
-    }
-  }
-
-  function renderOuting(data) {
-    const { outing, members, current_member, pending_approvals } = data;
-    document.title = `${outing.name} — Shelah`;
-
-    // Not a member and open outing
-    if (!current_member && outing.outing_type === 'open') {
-      document.getElementById('public-view').style.display = 'block';
-      document.getElementById('public-view').innerHTML = `
-        <div style="text-align:center;padding:48px 20px">
-          <h1 style="font-size:2rem;font-weight:900">${escapeHtml(outing.name)}</h1>
-          <p style="color:var(--text-secondary);margin:8px 0">${formatDate(outing.scheduled_date)}</p>
-          <span class="pill pill-open">🌐 Open</span>
-          <p style="margin-top:24px;color:var(--text-secondary)">This is an open outing! Sign in and ask to be invited.</p>
-        </div>`;
-      return;
-    }
-
-    // Invited (pending)
-    if (current_member && current_member.invite_status === 'pending') {
-      document.getElementById('invited-view').style.display = 'block';
-      const typeCls = { open:'pill-open', closed:'pill-closed', restricted:'pill-restricted' }[outing.outing_type];
-      document.getElementById('invited-view').innerHTML = `
-        <div style="text-align:center;padding:48px 20px">
-          <h1 style="font-size:2rem;font-weight:900">${escapeHtml(outing.name)}</h1>
-          <p style="color:var(--text-secondary);margin:8px 0">${formatDate(outing.scheduled_date)}</p>
-          <span class="pill ${typeCls}">${outing.outing_type}</span>
-          <p style="margin:24px 0;font-size:1.1rem">You've been invited to join <strong>${escapeHtml(outing.name)}</strong>! 🎉</p>
-          <button class="btn btn-accent btn-lg" id="accept-btn" onclick="handleAccept()">🤝 Accept Invite</button>
-          <div class="section" style="margin-top:32px;text-align:left">
-            <h3 class="section-title">Members</h3>
-            <div class="members-list">${members.map(m => `
-              <div class="member-row">
-                ${avatarHtml(m.display_name)}
-                <span class="member-name">${escapeHtml(m.display_name)}</span>
-                <span class="member-status">${m.invite_status==='accepted'?'✅':'⏳'}</span>
-              </div>`).join('')}
+  <!-- REQUIREMENTS MODAL -->
+  <div class="modal-overlay" id="req-modal">
+    <div class="modal" style="width:min(800px, 95vw);max-height:90vh;overflow-y:auto">
+      <div class="modal-inner">
+        <h3 class="modal-title">📋 Set Your Preferences</h3>
+        <p style="color:var(--text-muted);margin-bottom:24px">Tell us what you're looking for, and we'll combine it with everyone else's preferences to find the perfect spots.</p>
+        
+        <div class="req-grid">
+          <div>
+            <div class="req-section">
+              <div class="req-label">📍 Starting Location</div>
+              <div class="map-container" id="req-map"></div>
+              <button class="btn btn-outline btn-sm btn-block" onclick="useGPS()">📡 Use Current Location</button>
+              <div id="req-coords" style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:8px"></div>
+            </div>
+            
+            <div class="req-section">
+              <div class="req-label">📏 Max Distance</div>
+              <div class="slider-wrap">
+                <input type="range" id="req-distance" min="1" max="50" value="25" oninput="updateSlider(this)">
+                <div class="slider-label" id="distance-label">Up to 25 km away</div>
+              </div>
             </div>
           </div>
-        </div>`;
-      return;
-    }
+          
+          <div>
+            <div class="req-section">
+              <div class="req-label">💰 Budget Preference</div>
+              <div class="chips-grid">
+                <button class="chip active" data-budget="any" onclick="selectBudget(this)">Any Budget</button>
+                <button class="chip" data-budget="budget" onclick="selectBudget(this)">💰 Budget</button>
+                <button class="chip" data-budget="moderate" onclick="selectBudget(this)">💰💰 Moderate</button>
+                <button class="chip" data-budget="upscale" onclick="selectBudget(this)">💰💰💰 Upscale</button>
+                <button class="chip" data-budget="luxury" onclick="selectBudget(this)">💰💰💰💰 Luxury</button>
+              </div>
+            </div>
 
-    // Member view (accepted)
-    document.getElementById('member-view').style.display = 'block';
-    const typeCls = { open:'pill-open', closed:'pill-closed', restricted:'pill-restricted' }[outing.outing_type];
-    const typeLabel = { open:'🌐 Open', closed:'🔒 Closed', restricted:'🔑 Restricted' }[outing.outing_type];
-    const shareUrl = window.location.origin + '/outing.html?id=' + outing.id;
+            <div class="req-section">
+              <div class="req-label">⭐ Minimum Rating</div>
+              <div class="star-picker" id="star-picker">
+                <span class="star active" data-val="1" onclick="pickStar(1)">★</span>
+                <span class="star active" data-val="2" onclick="pickStar(2)">★</span>
+                <span class="star active" data-val="3" onclick="pickStar(3)">★</span>
+                <span class="star" data-val="4" onclick="pickStar(4)">★</span>
+                <span class="star" data-val="5" onclick="pickStar(5)">★</span>
+              </div>
+            </div>
 
-    let actionsHtml = '';
-    if (outing.outing_type !== 'closed') {
-      actionsHtml += `<button class="btn btn-outline" onclick="openInviteModal()">👥 Invite Friend</button>`;
-    }
-    actionsHtml += `<button class="btn btn-primary" onclick="openReqModal()">📋 Edit Requirements</button>`;
-    
-    const allSubmitted = members.length > 0 && members.every(m => m.requirements_submitted);
-    if (allSubmitted) {
-      actionsHtml += `<button class="btn btn-accent" onclick="openRecsModal()">🏆 View Recommendations</button>`;
-    }
-
-    document.getElementById('member-view').innerHTML = `
-      <div class="outing-header" style="margin-top:32px">
-        <h1>${escapeHtml(outing.name)}</h1>
-        <div class="outing-date">${formatDate(outing.scheduled_date)}</div>
-        <span class="pill ${typeCls}">${typeLabel}</span>
-        <div class="share-box">
-          <input type="text" value="${shareUrl}" readonly id="share-url">
-          <button class="btn btn-sm btn-outline" onclick="copyLink()">📋 Copy</button>
+            <div class="req-section">
+              <div class="req-label">🔥 Popularity Vibe</div>
+              <div class="chips-grid">
+                <button class="chip active" data-pop="any" onclick="selectPop(this)">Any Vibe</button>
+                <button class="chip" data-pop="niche" onclick="selectPop(this)">🎭 Hidden Gem</button>
+                <button class="chip" data-pop="moderate" onclick="selectPop(this)">🏪 Well Known</button>
+                <button class="chip" data-pop="mainstream" onclick="selectPop(this)">🌟 Trending</button>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="outing-actions">${actionsHtml}</div>
+        
+        <div class="req-section" style="margin-top:16px;border-top:2px solid var(--border);padding-top:24px">
+          <div class="req-label">📍 Preferred Location Types</div>
+          <div class="chips-grid" id="location-types-grid"></div>
+        </div>
+
+        <div style="margin-top:32px;display:flex;justify-content:flex-end;gap:12px">
+          <button class="btn btn-outline" onclick="closeModal('req-modal')">Cancel</button>
+          <button class="btn btn-primary" id="save-req-btn" onclick="handleSaveReq()">Save Preferences ✅</button>
+        </div>
       </div>
-      <div class="section">
-        <h3 class="section-title">👥 Members (${members.length})</h3>
-        <div class="members-list" id="members-list">
-          ${members.map(m => `
-            <div class="member-row">
-              ${avatarHtml(m.display_name)}
-              <span class="member-name">${escapeHtml(m.display_name)}</span>
-              <span class="member-status" title="Invite">${m.invite_status==='accepted'?'✅':'⏳'}</span>
-              <span class="member-status" title="Requirements">${m.requirements_submitted?'📋':'❓'}</span>
-            </div>`).join('')}
-        </div>
-      </div>`;
-  }
+    </div>
+  </div>
 
-  async function handleAccept() {
-    const btn = document.getElementById('accept-btn');
-    btnLoading(btn, true);
-    try {
-      await acceptInvite(outingId);
-      showToast('Invite accepted! 🎉', 'success');
-      location.reload();
-    } catch (err) {
-      showToast(err.error || 'Failed to accept invite', 'error');
-      btnLoading(btn, false);
+  <div class="toast-fixed" id="toast"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/maps.js"></script>
+  <script>
+    let outingId = new URLSearchParams(window.location.search).get('id');
+    let outingData = null;
+    let reqLat = null, reqLng = null;
+    let reqPopularity = 'any', reqMinRating = 3, reqBudget = 'any', reqLocationTypes = [];
+
+    async function onAuthReady() {
+      if (!outingId) { window.location.href = '/groups.html'; return; }
+      await loadOuting();
     }
-  }
 
-  function copyLink() {
-    const url = document.getElementById('share-url').value;
-    navigator.clipboard.writeText(url).then(() => showToast('Link copied! 📋', 'success'));
-  }
-
-  // --- Invite ---
-  async function openInviteModal() {
-    openModal('invite-modal');
-    const container = document.getElementById('invite-friends-list');
-    try {
-      const data = await getFriends();
-      const memberIds = (outingData?.members||[]).map(m => m.user_id);
-      const available = data.friends.filter(f => !memberIds.includes(f.id));
-      if (!available.length) {
-        container.innerHTML = '<div class="empty-state"><span class="icon">✨</span><p>All your friends are already in this outing!</p></div>';
-      } else {
-        container.innerHTML = available.map(f => `
-          <div class="member-row">
-            ${avatarHtml(f.display_name)}
-            <span class="member-name">${escapeHtml(f.display_name)}</span>
-            <button class="btn btn-sm btn-primary" onclick="handleInvite('${f.id}',this)">Invite</button>
-          </div>`).join('');
-      }
-    } catch (err) {
-      container.innerHTML = '<p style="color:var(--error)">Failed to load friends</p>';
-    }
-    // Load pending approvals for restricted
-    if (outingData?.outing?.outing_type === 'restricted') {
-      const appSection = document.getElementById('pending-approvals-section');
-      const appList = document.getElementById('pending-approvals-list');
-      const approvals = outingData?.pending_approvals || [];
-      if (approvals.length) {
-        appSection.style.display = 'block';
-        appList.innerHTML = approvals.map(a => `
-          <div class="member-row" id="approval-${a.candidate_user_id}">
-            ${avatarHtml(a.candidate_name)}
-            <span class="member-name">Invite ${escapeHtml(a.candidate_name)}?</span>
-            <button class="btn btn-sm btn-primary" onclick="handleApproval('${a.candidate_user_id}',true)">✓</button>
-            <button class="btn btn-sm btn-danger" onclick="handleApproval('${a.candidate_user_id}',false)">✗</button>
-          </div>`).join('');
+    async function loadOuting() {
+      try {
+        const data = await getOuting(outingId);
+        outingData = data;
+        renderOuting(data);
+      } catch (err) {
+        const vc = document.getElementById('view-container');
+        if (err.status === 403) {
+          vc.innerHTML = `
+            <div class="hero-banner blue"><div class="hero-inner"><h1 class="hero-title">Private Group 🔒</h1><p class="hero-sub">You need to be invited to view this group.</p></div></div>
+            <div class="page-body" style="text-align:center"><a href="/groups.html" class="btn btn-primary">Go to My Groups</a></div>
+          `;
+          return;
+        }
+        if (err.status === 401 && !window.currentUser) {
+          vc.innerHTML = `
+            <div class="hero-banner blue"><div class="hero-inner"><h1 class="hero-title">Sign in required 🔐</h1><p class="hero-sub">You need to sign in to view group details.</p></div></div>
+            <div class="page-body" style="text-align:center"><button onclick="openAuthModal()" class="btn btn-primary">Sign In</button></div>
+          `;
+          return;
+        }
+        vc.innerHTML = `<div class="page-body"><div class="empty-state"><div class="icon">⚠️</div><div class="title">Failed to load group</div></div></div>`;
       }
     }
-  }
 
-  async function handleInvite(userId, btn) {
-    btnLoading(btn, true);
-    try {
-      await inviteToOuting(outingId, userId);
-      showToast('Invitation sent!', 'success');
-      btn.parentElement.remove();
-    } catch (err) {
-      showToast(err.error || 'Failed to invite', 'error');
-      btnLoading(btn, false);
-    }
-  }
+    function renderOuting(data) {
+      const { outing, members, current_member, pending_approvals } = data;
+      document.title = `${outing.name} — Shelah`;
+      const vc = document.getElementById('view-container');
 
-  async function handleApproval(candidateId, approved) {
-    try {
-      await approveInvite(outingId, candidateId, approved);
-      document.getElementById('approval-' + candidateId)?.remove();
-      showToast(approved ? 'Approved!' : 'Rejected', approved ? 'success' : 'info');
-    } catch (err) {
-      showToast(err.error || 'Failed', 'error');
-    }
-  }
+      const d = new Date(outing.scheduled_date + 'T00:00:00');
+      const dateStr = d.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
+      const shareUrl = window.location.origin + '/invite.html?code=' + outing.id; // Usually it's invite.html for groups too, but let's just use outing
+      const outingLink = window.location.origin + '/outing.html?id=' + outing.id;
 
-  // --- Requirements ---
-  async function openReqModal() {
-    openModal('req-modal');
-    try {
-      const data = await getRequirements(outingId);
-      // Populate location types
-      const grid = document.getElementById('location-types-grid');
-      grid.innerHTML = (data.location_types||[]).map(lt => {
-        const active = (data.selected_location_type_ids||[]).includes(lt.id) ? 'active' : '';
-        return `<button class="chip ${active}" data-ltid="${lt.id}" onclick="toggleLocType(this)">${lt.icon||'📍'} ${escapeHtml(lt.name)}</button>`;
+      // Not a member and open outing
+      if (!current_member && outing.outing_type === 'open') {
+        vc.innerHTML = `
+          <div class="hero-banner blue">
+            <div class="hero-inner">
+              <div class="hero-eyebrow"><span class="dot"></span> Open Group</div>
+              <h1 class="hero-title">${escapeHtml(outing.name)}</h1>
+              <p class="hero-sub">This is a public group happening on ${dateStr}.</p>
+            </div>
+          </div>
+          <div class="page-body" style="text-align:center">
+            <div class="card" style="padding:40px;max-width:500px;margin:0 auto">
+              <div style="font-size:48px;margin-bottom:16px">🌍</div>
+              <h2 style="font-family:'Baloo 2';font-size:24px;margin-bottom:8px">Join the fun</h2>
+              <p style="color:var(--text-muted);margin-bottom:24px">Sign in and ask to join this open group!</p>
+              <button class="btn btn-primary" onclick="openAuthModal()">Sign In</button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // Invited (pending)
+      if (current_member && current_member.invite_status === 'pending') {
+        vc.innerHTML = `
+          <div class="hero-banner blue">
+            <div class="hero-inner">
+              <div class="hero-eyebrow"><span class="dot"></span> Group Invite</div>
+              <h1 class="hero-title">You've been invited! 🎉</h1>
+              <p class="hero-sub">Join ${escapeHtml(outing.name)} on ${dateStr}</p>
+            </div>
+          </div>
+          <div class="page-body" style="text-align:center">
+            <div class="card" style="padding:40px;max-width:500px;margin:0 auto">
+              <h2 style="font-family:'Baloo 2';font-size:24px;margin-bottom:24px">Are you in?</h2>
+              <button class="btn btn-accent btn-lg btn-block" id="accept-btn" onclick="handleAccept()">🤝 Accept Invite</button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // Member view (accepted)
+      const isConfirmed = members.length > 0 && members.every(m => m.requirements_submitted);
+      
+      let badgeHtml = isConfirmed 
+        ? `<div class="hero-eyebrow"><span class="dot" style="background:#10B981"></span> Confirmed Group</div>`
+        : `<div class="hero-eyebrow"><span class="dot" style="background:#ffaa00"></span> Pending Preferences</div>`;
+
+      let mainActions = `
+        <button class="btn btn-primary" onclick="openReqModal()">📋 Edit Preferences</button>
+      `;
+      if (isConfirmed) {
+        mainActions += `<a href="/recommendations.html?outing_id=${outing.id}" class="btn btn-accent">🏆 View Recommendations</a>`;
+      }
+
+      let inviteBtn = outing.outing_type !== 'closed' ? `<button class="btn btn-outline btn-block" style="margin-top:16px" onclick="openInviteModal()">👥 Invite Friends</button>` : '';
+
+      const membersHtml = members.map(m => {
+        const c = getAvatarColor(m.display_name);
+        const init = (m.display_name||'?')[0].toUpperCase();
+        const status = m.requirements_submitted 
+          ? `<span class="mi-status"><span class="status-dot dot-ready"></span> Ready</span>`
+          : `<span class="mi-status"><span class="status-dot dot-pending"></span> Choosing preferences...</span>`;
+        return `
+          <div class="member-item">
+            <div class="mi-avatar" style="background:${c}">${init}</div>
+            <div class="mi-info">
+              <div class="mi-name">${escapeHtml(m.display_name)}</div>
+              ${status}
+            </div>
+          </div>
+        `;
       }).join('');
-      // Populate saved values
-      const req = data.requirements;
-      if (req) {
-        reqLat = parseFloat(req.home_latitude) || null;
-        reqLng = parseFloat(req.home_longitude) || null;
-        document.getElementById('req-distance').value = req.max_distance_km || 25;
-        updateSlider(document.getElementById('req-distance'));
-        reqPopularity = req.popularity_preference || 'any';
-        reqMinRating = parseFloat(req.min_rating) || 3;
-        reqBudget = req.budget_tier || 'any';
-        pickStar(Math.round(reqMinRating));
-        document.querySelectorAll('[data-pop]').forEach(c => c.classList.toggle('active', c.dataset.pop === reqPopularity));
-        document.querySelectorAll('[data-budget]').forEach(c => c.classList.toggle('active', c.dataset.budget === reqBudget));
+
+      vc.innerHTML = `
+        <div class="hero-banner blue">
+          <div class="hero-inner">
+            ${badgeHtml}
+            <h1 class="hero-title">${escapeHtml(outing.name)}</h1>
+            <p class="hero-sub" style="margin-bottom:24px">Group planning dashboard</p>
+            <div style="display:flex;gap:12px;flex-wrap:wrap">
+              ${mainActions}
+            </div>
+          </div>
+        </div>
+
+        <div class="page-body">
+          <div class="outing-dashboard">
+            
+            <!-- Main Column -->
+            <div>
+              <div class="card" style="padding:32px">
+                <h2 style="font-family:'Baloo 2';font-size:24px;margin-bottom:20px;display:flex;align-items:center;gap:10px">
+                  👥 Squad Members (${members.length})
+                </h2>
+                ${!isConfirmed ? `<div style="padding:12px 16px;background:rgba(255,170,0,0.1);border-left:4px solid #ffaa00;border-radius:0 12px 12px 0;margin-bottom:24px;font-size:14px;color:#b45309;font-weight:600">Waiting for all members to submit their preferences before showing recommendations.</div>` : ''}
+                
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  ${membersHtml}
+                </div>
+              </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div>
+              <div class="card" style="padding:24px">
+                <h3 style="font-family:'Baloo 2';font-size:20px;margin-bottom:20px">Details</h3>
+                
+                <div class="stat-block">
+                  <div class="sb-icon">🗓️</div>
+                  <div class="sb-info">
+                    <div class="sb-label">Date</div>
+                    <div class="sb-val">${dateStr}</div>
+                  </div>
+                </div>
+
+                <div class="stat-block">
+                  <div class="sb-icon">${outing.outing_type === 'closed' ? '🔒' : outing.outing_type === 'open' ? '🌍' : '🛡️'}</div>
+                  <div class="sb-info">
+                    <div class="sb-label">Type</div>
+                    <div class="sb-val" style="text-transform:capitalize">${outing.outing_type}</div>
+                  </div>
+                </div>
+
+                ${outing.description ? `
+                  <div style="margin-top:20px">
+                    <div class="sb-label" style="margin-bottom:8px">Description</div>
+                    <div class="desc-box">${escapeHtml(outing.description)}</div>
+                  </div>
+                ` : ''}
+
+                <div style="margin-top:20px">
+                  <div class="sb-label" style="margin-bottom:8px">Share Link</div>
+                  <div class="share-box">
+                    <input type="text" value="${outingLink}" readonly id="share-url">
+                    <button class="btn btn-primary" style="padding:8px 14px;border-radius:10px;margin:4px" onclick="copyLink()">Copy</button>
+                  </div>
+                </div>
+
+                ${inviteBtn}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      `;
+    }
+
+    async function handleAccept() {
+      const btn = document.getElementById('accept-btn');
+      btnLoading(btn, true);
+      try {
+        await acceptInvite(outingId);
+        showPageToast('Invite accepted! 🎉');
+        loadOuting();
+      } catch (err) {
+        showPageToast('❌ ' + (err.error || 'Failed to accept invite'));
+        btnLoading(btn, false);
       }
-      reqLocationTypes = data.selected_location_type_ids || [];
-      // Init map
-      initLocationPicker('req-map', (loc) => {
+    }
+
+    function copyLink() {
+      const url = document.getElementById('share-url').value;
+      navigator.clipboard.writeText(url).then(() => showPageToast('Link copied! 📋'));
+    }
+
+    // --- Invite ---
+    async function openInviteModal() {
+      openModal('invite-modal');
+      const container = document.getElementById('invite-friends-list');
+      try {
+        const data = await getFriends();
+        const memberIds = (outingData?.members||[]).map(m => m.user_id);
+        const available = data.friends.filter(f => !memberIds.includes(f.friend_id));
+        
+        if (!available.length) {
+          container.innerHTML = '<div class="empty-state"><span class="icon">✨</span><div class="title">No friends available</div><p>All your friends are already in this group.</p></div>';
+        } else {
+          container.innerHTML = available.map(f => {
+            const c = getAvatarColor(f.display_name);
+            const init = (f.display_name||'?')[0].toUpperCase();
+            return `
+            <div class="member-item" style="border:1px solid var(--border);margin-bottom:8px">
+              <div class="mi-avatar" style="background:${c}">${init}</div>
+              <div class="mi-info">
+                <div class="mi-name">${escapeHtml(f.display_name)}</div>
+              </div>
+              <button class="btn btn-sm btn-primary" onclick="handleInvite('${f.friend_id}',this)">Invite</button>
+            </div>`;
+          }).join('');
+        }
+      } catch (err) {
+        container.innerHTML = '<p style="color:var(--red)">Failed to load friends</p>';
+      }
+
+      // Pending approvals
+      if (outingData?.outing?.outing_type === 'restricted') {
+        const appSection = document.getElementById('pending-approvals-section');
+        const appList = document.getElementById('pending-approvals-list');
+        const approvals = outingData?.pending_approvals || [];
+        if (approvals.length) {
+          appSection.style.display = 'block';
+          appList.innerHTML = approvals.map(a => {
+            const c = getAvatarColor(a.candidate_name);
+            const init = (a.candidate_name||'?')[0].toUpperCase();
+            return `
+            <div class="member-item" style="border:1px solid var(--border);margin-bottom:8px" id="appr-${a.candidate_user_id}">
+              <div class="mi-avatar" style="background:${c}">${init}</div>
+              <div class="mi-info"><div class="mi-name">${escapeHtml(a.candidate_name)}</div></div>
+              <button class="btn btn-sm btn-primary" onclick="handleApproval('${a.candidate_user_id}',true)">✓ Approve</button>
+              <button class="btn btn-sm btn-outline" onclick="handleApproval('${a.candidate_user_id}',false)">✗</button>
+            </div>`;
+          }).join('');
+        }
+      }
+    }
+
+    async function handleInvite(userId, btn) {
+      btnLoading(btn, true);
+      try {
+        await inviteToOuting(outingId, userId);
+        showPageToast('Invitation sent! 📨');
+        btn.parentElement.remove();
+      } catch (err) {
+        showPageToast('❌ ' + (err.error || 'Failed to invite'));
+        btnLoading(btn, false);
+      }
+    }
+
+    async function handleApproval(candidateId, approved) {
+      try {
+        await approveInvite(outingId, candidateId, approved);
+        document.getElementById('appr-' + candidateId)?.remove();
+        showPageToast(approved ? 'Approved! ✅' : 'Rejected');
+      } catch (err) {
+        showPageToast('❌ ' + (err.error || 'Failed'));
+      }
+    }
+
+    // --- Requirements ---
+    async function openReqModal() {
+      openModal('req-modal');
+      try {
+        const data = await getRequirements(outingId);
+        
+        // Populate location types
+        const grid = document.getElementById('location-types-grid');
+        grid.innerHTML = (data.location_types||[]).map(lt => {
+          const active = (data.selected_location_type_ids||[]).includes(lt.id) ? 'active' : '';
+          return `<button class="chip ${active}" data-ltid="${lt.id}" onclick="toggleLocType(this)">${lt.icon||'📍'} ${escapeHtml(lt.name)}</button>`;
+        }).join('');
+        
+        // Populate saved values
+        const req = data.requirements;
+        if (req) {
+          reqLat = parseFloat(req.home_latitude) || null;
+          reqLng = parseFloat(req.home_longitude) || null;
+          document.getElementById('req-distance').value = req.max_distance_km || 25;
+          updateSlider(document.getElementById('req-distance'));
+          reqPopularity = req.popularity_preference || 'any';
+          reqMinRating = parseFloat(req.min_rating) || 3;
+          reqBudget = req.budget_tier || 'any';
+          pickStar(Math.round(reqMinRating));
+          document.querySelectorAll('[data-pop]').forEach(c => c.classList.toggle('active', c.dataset.pop === reqPopularity));
+          document.querySelectorAll('[data-budget]').forEach(c => c.classList.toggle('active', c.dataset.budget === reqBudget));
+        }
+        reqLocationTypes = data.selected_location_type_ids || [];
+        
+        // Init map
+        initLocationPicker('req-map', (loc) => {
+          reqLat = loc.lat; reqLng = loc.lng;
+          document.getElementById('req-coords').textContent = `${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}`;
+        }, reqLat, reqLng);
+      } catch (err) {
+        showPageToast('❌ Failed to load preferences');
+      }
+    }
+
+    function useGPS() {
+      tryGPS((loc) => {
         reqLat = loc.lat; reqLng = loc.lng;
+        setMapLocation('req-map', loc.lat, loc.lng);
         document.getElementById('req-coords').textContent = `${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}`;
-      }, reqLat, reqLng);
-    } catch (err) {
-      showToast('Failed to load requirements', 'error');
-    }
-  }
-
-  function useGPS() {
-    tryGPS((loc) => {
-      reqLat = loc.lat; reqLng = loc.lng;
-      setMapLocation('req-map', loc.lat, loc.lng);
-      document.getElementById('req-coords').textContent = `${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}`;
-      showToast('GPS location set!', 'success');
-    }, (err) => {
-      showToast('GPS failed: ' + err, 'error');
-    });
-  }
-
-  function updateSlider(el) {
-    const val = el.value;
-    document.getElementById('distance-label').textContent = `Up to ${val} km away`;
-    const pct = ((val - 1) / 49) * 100;
-    el.style.background = `linear-gradient(90deg, var(--primary) ${pct}%, var(--border) ${pct}%)`;
-  }
-
-  function selectPop(el) {
-    reqPopularity = el.dataset.pop;
-    el.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    el.classList.add('active');
-  }
-
-  function pickStar(val) {
-    reqMinRating = val;
-    document.querySelectorAll('#star-picker .star').forEach(s => {
-      s.classList.toggle('active', parseInt(s.dataset.val) <= val);
-    });
-  }
-
-  function selectBudget(el) {
-    reqBudget = el.dataset.budget;
-    el.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    el.classList.add('active');
-  }
-
-  function toggleLocType(el) {
-    el.classList.toggle('active');
-    const id = el.dataset.ltid;
-    if (el.classList.contains('active')) {
-      if (!reqLocationTypes.includes(id)) reqLocationTypes.push(id);
-    } else {
-      reqLocationTypes = reqLocationTypes.filter(x => x !== id);
-    }
-  }
-
-  async function handleSaveReq() {
-    const btn = document.getElementById('save-req-btn');
-    btnLoading(btn, true);
-    try {
-      await saveRequirements({
-        outing_id: outingId,
-        home_latitude: reqLat,
-        home_longitude: reqLng,
-        max_distance_km: parseInt(document.getElementById('req-distance').value),
-        popularity_preference: reqPopularity,
-        min_rating: reqMinRating,
-        budget_tier: reqBudget,
-        location_type_ids: reqLocationTypes
+        showPageToast('GPS location set! 📍');
+      }, (err) => {
+        showPageToast('❌ GPS failed: ' + err);
       });
-      showToast('Requirements saved! ✅', 'success');
-      closeModal('req-modal');
-      loadOuting();
-    } catch (err) {
-      showToast(err.error || 'Failed to save', 'error');
-    } finally {
-      btnLoading(btn, false);
     }
-  }
 
-  // --- Recommendations ---
-  async function openRecsModal() {
-    openModal('recs-modal');
-    const container = document.getElementById('recs-container');
-    const countEl = document.getElementById('recs-count');
-    container.innerHTML = '<div class="skeleton" style="height:100px;margin-bottom:12px"></div><div class="skeleton" style="height:100px"></div>';
-    try {
-      const data = await getRecommendations(outingId);
-      if (data.members_with_requirements === 0) {
-        container.innerHTML = '<div class="empty-state"><span class="icon">📋</span><div class="title">No requirements submitted yet</div><p>Members need to submit their requirements first.</p></div>';
-        countEl.textContent = '';
-        return;
+    function updateSlider(el) {
+      const val = el.value;
+      document.getElementById('distance-label').textContent = `Up to ${val} km away`;
+      const pct = ((val - 1) / 49) * 100;
+      el.style.background = `linear-gradient(90deg, #0049B7 ${pct}%, var(--border) ${pct}%)`;
+    }
+
+    function selectPop(el) {
+      reqPopularity = el.dataset.pop;
+      el.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    function pickStar(val) {
+      reqMinRating = val;
+      document.querySelectorAll('#star-picker .star').forEach(s => {
+        s.classList.toggle('active', parseInt(s.dataset.val) <= val);
+      });
+    }
+
+    function selectBudget(el) {
+      reqBudget = el.dataset.budget;
+      el.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    function toggleLocType(el) {
+      el.classList.toggle('active');
+      const id = el.dataset.ltid;
+      if (el.classList.contains('active')) {
+        if (!reqLocationTypes.includes(id)) reqLocationTypes.push(id);
+      } else {
+        reqLocationTypes = reqLocationTypes.filter(x => x !== id);
       }
-      countEl.textContent = `Showing ${data.places.length} matching places (${data.members_with_requirements}/${data.total_members} members submitted requirements)`;
-      if (!data.places.length) {
-        container.innerHTML = '<div class="empty-state"><span class="icon">😅</span><div class="title">No places match everyone\'s requirements</div><p>Try relaxing some constraints.</p></div>';
-        return;
+    }
+
+    async function handleSaveReq() {
+      const btn = document.getElementById('save-req-btn');
+      btnLoading(btn, true);
+      try {
+        await saveRequirements({
+          outing_id: outingId,
+          home_latitude: reqLat,
+          home_longitude: reqLng,
+          max_distance_km: parseInt(document.getElementById('req-distance').value),
+          popularity_preference: reqPopularity,
+          min_rating: reqMinRating,
+          budget_tier: reqBudget,
+          location_type_ids: reqLocationTypes
+        });
+        showPageToast('Preferences saved! ✅');
+        closeModal('req-modal');
+        loadOuting();
+      } catch (err) {
+        showPageToast('❌ ' + (err.error || 'Failed to save'));
+      } finally {
+        btnLoading(btn, false);
       }
-      container.innerHTML = '<div class="places-grid">' + data.places.map(p => renderPlaceCard(p)).join('') + '</div>';
-    } catch (err) {
-      container.innerHTML = '<div class="empty-state"><span class="icon">⚠️</span><p>Failed to load recommendations</p></div>';
     }
-  }
 
-  function renderPlaceCard(p) {
-    const thumb = p.thumbnail_url
-      ? `<img src="${escapeHtml(p.thumbnail_url)}" alt="${escapeHtml(p.name)}">`
-      : `<span>${p.location_type_icon||'📍'}</span>`;
-    const dist = p.distance_km !== null ? `${p.distance_km} km away` : '';
-    const popCls = { niche:'pill-niche', moderate:'pill-moderate', mainstream:'pill-mainstream' }[p.popularity] || '';
-    const budgetCls = { budget:'pill-budget', moderate:'pill-moderate', upscale:'pill-upscale', luxury:'pill-luxury' }[p.budget_tier] || '';
-    const votedCls = p.user_voted ? 'voted' : '';
-
-    return `<div class="place-card" id="place-${p.id}">
-      <div class="place-thumb">${thumb}</div>
-      <div class="place-info">
-        <div class="place-name">${escapeHtml(p.name)}</div>
-        <div class="place-meta">
-          <span class="pill ${popCls}">${p.popularity||''}</span>
-          <span class="pill ${budgetCls}">${budgetEmoji(p.budget_tier)} ${p.price_per_person_egp?p.price_per_person_egp+' EGP':''}</span>
-        </div>
-        <div class="place-meta">
-          ${starsHtml(p.rating)}
-          ${p.location_type_name ? '<span>'+escapeHtml(p.location_type_name)+'</span>' : ''}
-          ${dist ? '<span>📍 '+dist+'</span>' : ''}
-        </div>
-      </div>
-      <div class="place-actions">
-        <button class="vote-btn ${votedCls}" onclick="handleVote('${p.id}',this)" title="Vote">🔥</button>
-        <span class="vote-count" id="vc-${p.id}">${p.vote_count} votes</span>
-      </div>
-    </div>`;
-  }
-
-  async function handleVote(placeId, btn) {
-    try {
-      const data = await toggleVote(outingId, placeId);
-      btn.classList.toggle('voted', data.voted);
-      document.getElementById('vc-' + placeId).textContent = data.vote_count + ' votes';
-      showToast(data.voted ? 'Voted! 🔥' : 'Vote removed', data.voted ? 'success' : 'info');
-    } catch (err) {
-      showToast(err.error || 'Failed to vote', 'error');
+    let toastTimer;
+    function showPageToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=>t.classList.remove('show'), 2800);
     }
-  }
-
-  // Init slider on load
-  document.addEventListener('DOMContentLoaded', () => {
-    updateSlider(document.getElementById('req-distance'));
-  });
-</script>
+  </script>
 </body>
 </html>

@@ -1,0 +1,15 @@
+This is a major change, make a plan to use the new frontend for the website that is based on the html files in the temp folder (without changing the temp files themselves) and apply the required backend changes. Make sure to use the same style and animations of the html files, if there is not a 1:1 equivalent then apply the same general style and animations for consistency.
+
+For the backend make sure to add a percentage for how well a place nicely suits the group's requirements, think about what matters exactly when fitting to the group's requirements as it will be used in the new changes.
+
+For the add friend page that should include removing the add friend prompt from the current codebase and instead create an add friend page as in the add_friend.html file. It also includes offering each user a shareable link that any other user can use to send them a friend request. It also includes a pending friend requests section and a list of friends section but without the user status and tags.
+
+For the create group page include a description section but do not include an emoji choice and do not include an hour/minute section.
+
+For the home page include a friends, groups, upcoming outings and invites pending counters as in the home_page.html file. The home page should include an add friend button, create new group button, view confimed outings button like in the home_page.html file and it should also include a view groups button as the current codebase
+
+For the confirmed outings page it should show the dropdown and the summarised information once selected as it does in the confirmed_outings.html file. It should also show top recommended places sorted by how well it matches the groups' requirements and it should show the percentage but without the tags. There should be a vote counter on each place and clicking on one should take the user to the outing's recommendations page.
+
+For the recommendations it should show the summarised information about the group at the top as it does in the recommendations.html file. It should not have tags. Each place should have a vote counter and voting should work through a vote button. The places should be sorted according to the percentage and should display it for each place.
+
+Make sure to plan for any backend changes needed for the new functionalities and make sure to use the new style and animations, 1:1 if possible or extrapolate if not

@@ -31,10 +31,14 @@ function updateAuthUI() {
   const navUser = document.getElementById('nav-user');
   if (navUser) {
     if (user) {
-      navUser.innerHTML = `<span>Hey, <strong>${escapeHtml(user.display_name)}</strong></span>
-        <button class="nav-btn" onclick="handleLogout()">Sign Out</button>`;
+      const initial = (user.display_name || '?')[0].toUpperCase();
+      navUser.innerHTML = `<div class="nav-user-name">
+        <div class="nav-avatar">${escapeHtml(initial)}</div>
+        <span>${escapeHtml(user.display_name)}</span>
+      </div>
+      <button class="nav-signout" onclick="handleLogout()">Sign Out</button>`;
     } else {
-      navUser.innerHTML = `<button class="nav-btn" onclick="openAuthModal()">Sign In</button>`;
+      navUser.innerHTML = `<button class="btn btn-accent btn-sm" onclick="openAuthModal()">Sign In</button>`;
     }
   }
   // Toggle auth-dependent elements
@@ -122,7 +126,16 @@ function formatDate(dateStr) {
 }
 
 function getAvatarColor(name) {
-  const colors = ['#7C3AED','#2563EB','#059669','#D97706','#DC2626','#7C2D12','#0891B2','#4338CA','#BE185D','#65A30D'];
+  const colors = [
+    'linear-gradient(135deg,#FF1D58,#F75990)',
+    'linear-gradient(135deg,#0049B7,#00DDFF)',
+    'linear-gradient(135deg,#ffe033,#ffaa00)',
+    'linear-gradient(135deg,#00b4d8,#0049B7)',
+    'linear-gradient(135deg,#10B981,#00b09b)',
+    'linear-gradient(135deg,#F75990,#ff8cb8)',
+    'linear-gradient(135deg,#7c3aed,#a78bfa)',
+    'linear-gradient(135deg,#ffe033,#FF1D58)'
+  ];
   let hash = 0;
   for (let i = 0; i < (name||'').length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
   return colors[Math.abs(hash) % colors.length];
@@ -131,7 +144,7 @@ function getAvatarColor(name) {
 function avatarHtml(name, size = 40) {
   const c = getAvatarColor(name);
   const initial = (name || '?')[0].toUpperCase();
-  return `<div class="avatar" style="width:${size}px;height:${size}px;background:${c};font-size:${size*0.45}px">${initial}</div>`;
+  return `<div class="avatar" style="width:${size}px;height:${size}px;background:${c};font-size:${size*0.4}px;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,.12)">${initial}</div>`;
 }
 
 function starsHtml(rating) {

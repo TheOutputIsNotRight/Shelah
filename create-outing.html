@@ -1,244 +1,433 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Create a new group and invite your friends.">
-  <title>Create Group — Shelah</title>
+  <title>Shelah — Create Group</title>
   <link rel="stylesheet" href="/css/styles.css">
-</head>
+  <style>
+    .hero-banner::after{content:'🫂';position:absolute;right:60px;top:8px;font-size:118px;opacity:.1;line-height:1;pointer-events:none;animation:floatG 6s ease-in-out infinite}
+    
+    .steps-container { margin-bottom: 30px; position: relative; }
+    .steps-line { position: absolute; top: 18px; left: 0; right: 0; height: 3px; background: rgba(0,0,0,0.06); z-index: 1; }
+    .steps-progress { position: absolute; top: 18px; left: 0; height: 3px; background: linear-gradient(90deg, #FF1D58, #0049B7); z-index: 2; transition: width 0.4s cubic-bezier(0.22, 0.68, 0, 1.2); }
+    .steps-grid { display: flex; justify-content: space-between; position: relative; z-index: 3; }
+    
+    .step-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; position: relative; transition: transform 0.2s; flex: 1; }
+    .step-item:hover { transform: translateY(-2px); }
+    .step-circle { width: 38px; height: 38px; border-radius: 50%; background: white; border: 3px solid #e8e8f0; display: flex; align-items: center; justify-content: center; font-weight: 700; font-family: 'Baloo 2', sans-serif; color: var(--text-muted); font-size: 16px; transition: all 0.3s; }
+    .step-label { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); transition: color 0.3s; text-align: center; }
+    
+    .step-item.active .step-circle { border-color: #0049B7; background: #0049B7; color: white; box-shadow: 0 4px 12px rgba(0,73,183,0.3); }
+    .step-item.active .step-label { color: #0049B7; }
+    .step-item.done .step-circle { border-color: #10B981; background: #10B981; color: white; }
+    .step-item.done .step-label { color: #10B981; }
 
+    .step-content { display: none; animation: popIn 0.35s cubic-bezier(0.22, 0.68, 0, 1.2); }
+    .step-content.active { display: block; }
+    @keyframes popIn { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    
+    .form-card { padding: 32px; background: white; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 24px; border: 1px solid var(--border); }
+    .form-header { text-align: center; margin-bottom: 28px; }
+    .form-header h2 { font-family: 'Baloo 2', sans-serif; font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+    .form-header p { font-size: 14px; color: var(--text-muted); }
+    
+    .field { margin-bottom: 24px; }
+    .field-label { display: block; font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px; }
+    .text-input { width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: 14px; font-size: 15px; background: #f7f7fb; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+    .text-input:focus { border-color: #0049B7; background: white; box-shadow: 0 4px 16px rgba(0,73,183,0.08); outline: none; }
+    
+    /* Friends selection */
+    .friends-search { position: relative; margin-bottom: 16px; }
+    .friends-search input { width: 100%; padding: 14px 16px 14px 44px; border: 2px solid var(--border); border-radius: 14px; font-size: 15px; }
+    .friends-search svg { position: absolute; left: 16px; top: 14px; width: 18px; height: 18px; stroke: var(--text-muted); }
+    
+    .friends-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; max-height: 300px; overflow-y: auto; padding-right: 8px; }
+    .friend-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: white; border: 2px solid var(--border); border-radius: 14px; cursor: pointer; transition: all 0.2s; }
+    .friend-item:hover { border-color: #0049B7; }
+    .friend-item.selected { border-color: #0049B7; background: rgba(0,73,183,0.04); }
+    .friend-info { display: flex; align-items: center; gap: 12px; }
+    .friend-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-family: 'Baloo 2', sans-serif; }
+    .friend-name { font-weight: 600; font-size: 15px; }
+    .checkbox { width: 22px; height: 22px; border: 2px solid var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .friend-item.selected .checkbox { background: #0049B7; border-color: #0049B7; }
+    .checkbox svg { width: 14px; height: 14px; stroke: white; opacity: 0; transform: scale(0.5); transition: all 0.2s; }
+    .friend-item.selected .checkbox svg { opacity: 1; transform: scale(1); }
+    
+    /* Type Selection */
+    .type-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+    .type-card { padding: 24px; border: 2px solid var(--border); border-radius: 16px; cursor: pointer; text-align: center; transition: all 0.2s; position: relative; }
+    .type-card:hover { border-color: var(--pink); transform: translateY(-4px); }
+    .type-card.selected { border-color: var(--red); background: rgba(255,29,88,0.03); box-shadow: 0 8px 24px rgba(255,29,88,0.12); }
+    .type-icon { font-size: 32px; margin-bottom: 12px; }
+    .type-title { font-family: 'Baloo 2', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .type-desc { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
+    .type-check { position: absolute; top: 12px; right: 12px; width: 24px; height: 24px; border-radius: 50%; background: var(--red); color: white; display: flex; align-items: center; justify-content: center; opacity: 0; transform: scale(0.5); transition: all 0.2s; }
+    .type-card.selected .type-check { opacity: 1; transform: scale(1); }
+
+    /* Calendar */
+    .calendar { background: white; border-radius: 16px; padding: 24px; border: 2px solid var(--border); }
+    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .cal-nav { background: #f0f4ff; border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #0049B7; transition: background 0.2s; }
+    .cal-nav:hover { background: #e0e8ff; }
+    .cal-month { font-family: 'Baloo 2', sans-serif; font-size: 18px; font-weight: 700; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
+    .cal-day-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; }
+    .cal-day { padding: 10px 0; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; }
+    .cal-day:hover:not(.disabled) { background: #f0f4ff; color: #0049B7; }
+    .cal-day.disabled { color: #d1d1e0; cursor: not-allowed; text-decoration: line-through; }
+    .cal-day.selected { background: #0049B7; color: white; box-shadow: 0 4px 12px rgba(0,73,183,0.3); }
+
+    .btn-group { display: flex; justify-content: space-between; margin-top: 32px; }
+    
+    .toast-fixed { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1a1a2e; color: white; padding: 12px 22px; border-radius: 50px; font-size: 13.5px; font-weight: 600; box-shadow: 0 8px 32px rgba(0,0,0,.25); transition: transform .35s cubic-bezier(.22,.68,0,1.2), opacity .3s; opacity: 0; z-index: 9999; display: flex; align-items: center; gap: 8px; }
+    .toast-fixed.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  </style>
+</head>
 <body>
+
+  <!-- NAV -->
   <nav class="nav">
-    <div class="container"><a href="/" class="nav-brand"><span>🎉</span> Shelah</a>
-      <div id="nav-user"></div>
+    <a href="/" class="nav-logo"><span class="l1">S</span><span class="l2">h</span><span class="l3">e</span><span class="l4">l</span><span class="l5">a</span><span class="l6">h</span></a>
+    <div class="nav-links">
+      <a href="/friends.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>Add Friend</a>
+      <a href="/create-outing.html" class="active"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Create Group</a>
+      <a href="/outings.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Outings</a>
     </div>
+    <div class="nav-right" id="nav-user"></div>
   </nav>
 
-  <main class="container" style="padding:32px 20px 48px">
-    <div class="card" style="max-width:560px;margin:0 auto">
-      <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:24px">🎯 Create Group</h1>
+  <!-- HERO -->
+  <div class="hero-banner blue">
+    <div class="hero-inner">
+      <div class="hero-eyebrow"><span class="dot"></span> New Group</div>
+      <h1 class="hero-title">Build your squad 🫂</h1>
+      <p class="hero-sub">Create a group, invite your friends, and start planning your next outing together.</p>
+    </div>
+  </div>
 
-      <div class="form-group">
-        <label class="form-label">Group Name</label>
-        <input type="text" class="form-input" id="outing-name" placeholder="Friday Night Out, Beach Trip...">
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Date</label>
-        <div id="selected-date" class="form-input" style="cursor:pointer;color:var(--text-light)"
-          onclick="openModal('date-modal')">No date set — tap to pick</div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Type</label>
-        <div id="selected-type" class="form-input" style="cursor:pointer;color:var(--text-light)"
-          onclick="openModal('type-modal')">No type set — tap to choose</div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Invited Friends</label>
-        <div id="invited-chips" class="chips-grid" style="margin-bottom:8px"></div>
-        <button class="btn btn-outline btn-sm" onclick="openMembersModal()">+ Add Member</button>
-      </div>
-
-      <div style="display:flex;gap:10px;margin-top:28px">
-        <button class="btn btn-primary btn-lg" style="flex:1" id="confirm-btn" onclick="confirmCreate()">✓
-          Confirm</button>
-        <a href="/" class="btn btn-ghost btn-lg">Cancel</a>
+  <div class="page-body" style="max-width: 800px;">
+    
+    <!-- STEPS INDICATOR -->
+    <div class="steps-container">
+      <div class="steps-line"></div>
+      <div class="steps-progress" id="step-progress" style="width: 0%"></div>
+      <div class="steps-grid">
+        <div class="step-item active" id="step-nav-1" onclick="goToStep(1)">
+          <div class="step-circle">1</div>
+          <div class="step-label">Details</div>
+        </div>
+        <div class="step-item" id="step-nav-2" onclick="goToStep(2)">
+          <div class="step-circle">2</div>
+          <div class="step-label">Members</div>
+        </div>
+        <div class="step-item" id="step-nav-3" onclick="goToStep(3)">
+          <div class="step-circle">3</div>
+          <div class="step-label">Type</div>
+        </div>
+        <div class="step-item" id="step-nav-4" onclick="goToStep(4)">
+          <div class="step-circle">4</div>
+          <div class="step-label">Date</div>
+        </div>
       </div>
     </div>
-  </main>
 
-  <!-- Type Modal -->
-  <div class="modal-overlay" id="type-modal">
-    <div class="modal modal-inner">
-      <h3 class="modal-title">Choose Group Type</h3>
-      <div class="type-options">
-        <div class="type-option" onclick="selectType('open')">
-          <div class="icon">🌐</div>
-          <div class="name">Open</div>
-          <div class="desc">Anyone with the link can join</div>
+    <!-- STEP 1: Details -->
+    <div class="step-content active" id="step-1">
+      <div class="form-card">
+        <div class="form-header">
+          <h2>Group Details</h2>
+          <p>Give your group a name and optional description.</p>
         </div>
-        <div class="type-option" onclick="selectType('closed')">
-          <div class="icon">🔒</div>
-          <div class="name">Closed</div>
-          <div class="desc">No new members after creation</div>
+        <div class="field">
+          <label class="field-label">Group Name <span class="req">*</span></label>
+          <input type="text" class="text-input" id="groupName" placeholder="e.g. Weekend Warriors, Birthday Squad..." required>
         </div>
-        <div class="type-option" onclick="selectType('restricted')">
-          <div class="icon">🔑</div>
-          <div class="name">Restricted</div>
-          <div class="desc">New members need everyone's approval</div>
+        <div class="field">
+          <label class="field-label">Description <span style="font-weight:400;text-transform:none">(Optional)</span></label>
+          <textarea class="text-input" id="groupDesc" placeholder="What's this group for?" rows="3"></textarea>
+        </div>
+        <div class="btn-group">
+          <div></div> <!-- spacer -->
+          <button class="btn btn-primary" onclick="nextStep(1)">Next Step &rarr;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: Members -->
+    <div class="step-content" id="step-2">
+      <div class="form-card">
+        <div class="form-header">
+          <h2>Add Members</h2>
+          <p>Select friends to invite to this group.</p>
+        </div>
+        <div class="friends-search">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="friendSearch" placeholder="Search friends by name..." onkeyup="filterFriends()">
+        </div>
+        <div class="friends-list" id="friendsList">
+          <div style="padding:20px;text-align:center;grid-column:1/-1;color:var(--text-muted)">Loading friends...</div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-outline" onclick="goToStep(1)">&larr; Back</button>
+          <button class="btn btn-primary" onclick="nextStep(2)">Next Step &rarr;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: Type -->
+    <div class="step-content" id="step-3">
+      <div class="form-card">
+        <div class="form-header">
+          <h2>Group Type</h2>
+          <p>How do you want to select recommendations?</p>
+        </div>
+        <div class="type-grid">
+          <div class="type-card selected" onclick="selectType('closed')" id="type-closed">
+            <div class="type-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="type-icon">🔒</div>
+            <div class="type-title">Closed</div>
+            <div class="type-desc">Only members can see recommendations and vote.</div>
+          </div>
+          <div class="type-card" onclick="selectType('open')" id="type-open">
+            <div class="type-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="type-icon">🌍</div>
+            <div class="type-title">Open</div>
+            <div class="type-desc">Anyone can see and vote on recommendations.</div>
+          </div>
+          <div class="type-card" onclick="selectType('restricted')" id="type-restricted">
+            <div class="type-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="type-icon">🛡️</div>
+            <div class="type-title">Restricted</div>
+            <div class="type-desc">Anyone can see, but only members can vote.</div>
+          </div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-outline" onclick="goToStep(2)">&larr; Back</button>
+          <button class="btn btn-primary" onclick="nextStep(3)">Next Step &rarr;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: Date -->
+    <div class="step-content" id="step-4">
+      <div class="form-card">
+        <div class="form-header">
+          <h2>When are we going?</h2>
+          <p>Select the date for your outing.</p>
+        </div>
+        
+        <div class="calendar" id="calendar">
+          <div class="cal-header">
+            <button class="cal-nav" onclick="changeMonth(-1)">&larr;</button>
+            <div class="cal-month" id="calMonthDisplay">May 2026</div>
+            <button class="cal-nav" onclick="changeMonth(1)">&rarr;</button>
+          </div>
+          <div class="cal-grid" id="calGrid">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+        <div style="text-align:center;margin-top:20px;font-weight:600;color:var(--text)" id="selectedDateDisplay">No date selected</div>
+
+        <div class="btn-group">
+          <button class="btn btn-outline" onclick="goToStep(3)">&larr; Back</button>
+          <button class="btn btn-accent" id="createBtn" onclick="submitGroup()">Create Group 🎉</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SUCCESS MODAL -->
+  <div class="modal-overlay" id="success-modal">
+    <div class="modal">
+      <div class="modal-inner" style="text-align:center">
+        <div style="font-size:64px;margin-bottom:16px;animation:floatG 3s infinite">🎉</div>
+        <h2 style="font-family:'Baloo 2';font-size:28px;margin-bottom:8px">Group Created!</h2>
+        <p style="color:var(--text-muted);margin-bottom:24px">Your squad has been assembled. Now let's decide where to go.</p>
+        <div style="display:flex;gap:12px;flex-direction:column">
+          <a href="#" id="viewGroupBtn" class="btn btn-primary btn-block">View Group Dashboard</a>
+          <a href="/groups.html" class="btn btn-outline btn-block">See All Groups</a>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Date Modal -->
-  <div class="modal-overlay" id="date-modal">
-    <div class="modal modal-inner">
-      <h3 class="modal-title">Pick a Date</h3>
-      <div class="calendar" id="calendar"></div>
-    </div>
-  </div>
-
-  <!-- Members Modal -->
-  <div class="modal-overlay" id="members-modal">
-    <div class="modal modal-inner">
-      <h3 class="modal-title">👥 Select Friends</h3>
-      <div id="friends-list-container">
-        <div class="empty-state"><span class="icon">👥</span>
-          <p>Loading friends...</p>
-        </div>
-      </div>
-      <button class="btn btn-primary btn-block" style="margin-top:16px"
-        onclick="closeModal('members-modal')">Done</button>
-    </div>
-  </div>
+  <div class="toast-fixed" id="toast"></div>
 
   <script src="/js/api.js"></script>
   <script src="/js/auth.js"></script>
   <script>
+    let currentStep = 1;
+    let selectedFriends = new Set();
+    let selectedType = 'closed';
     let selectedDate = null;
-    let selectedType = null;
-    let invitedFriends = []; // {id, display_name}
-    let calendarMonth, calendarYear;
+    let currentMonth = new Date();
+    currentMonth.setDate(1);
 
     function onAuthReady() {
       if (!requireAuth()) return;
+      loadFriends();
+      renderCalendar();
     }
 
-    // --- Type ---
-    function selectType(type) {
-      selectedType = type;
-      const labels = { open: '🌐 Open', closed: '🔒 Closed', restricted: '🔑 Restricted' };
-      const el = document.getElementById('selected-type');
-      el.textContent = labels[type];
-      el.style.color = 'var(--text)';
-      document.querySelectorAll('.type-option').forEach(o => o.classList.remove('selected'));
-      event.currentTarget.classList.add('selected');
-      closeModal('type-modal');
+    // -- STEPS --
+    function goToStep(step) {
+      if (step > currentStep && !validateStep(currentStep)) return;
+      
+      document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+      document.getElementById(`step-${step}`).classList.add('active');
+      
+      for(let i=1; i<=4; i++) {
+        const nav = document.getElementById(`step-nav-${i}`);
+        nav.classList.remove('active', 'done');
+        if (i < step) nav.classList.add('done');
+        if (i === step) nav.classList.add('active');
+      }
+      
+      document.getElementById('step-progress').style.width = ((step-1)/3)*100 + '%';
+      currentStep = step;
     }
 
-    // --- Calendar ---
-    function initCalendar() {
-      const now = new Date();
-      calendarMonth = now.getMonth();
-      calendarYear = now.getFullYear();
+    function nextStep(step) {
+      if (validateStep(step)) goToStep(step + 1);
+    }
+
+    function validateStep(step) {
+      if (step === 1) {
+        const name = document.getElementById('groupName').value.trim();
+        if (!name) { showPageToast('⚠️ Please enter a group name'); return false; }
+        return true;
+      }
+      if (step === 2) return true; // Optional members
+      if (step === 3) return true;
+      return true;
+    }
+
+    // -- FRIENDS --
+    async function loadFriends() {
+      try {
+        const data = await getFriends();
+        window.allFriends = data.friends || [];
+        renderFriendsList();
+      } catch(e) {}
+    }
+
+    function renderFriendsList() {
+      const q = document.getElementById('friendSearch').value.toLowerCase();
+      const list = document.getElementById('friendsList');
+      const filtered = (window.allFriends||[]).filter(f => f.display_name.toLowerCase().includes(q));
+      
+      if (!filtered.length) {
+        list.innerHTML = `<div style="padding:20px;text-align:center;grid-column:1/-1;color:var(--text-muted)">${q ? 'No friends found matching "'+q+'"' : 'You have no friends yet.'}</div>`;
+        return;
+      }
+      
+      list.innerHTML = filtered.map(f => {
+        const isSel = selectedFriends.has(f.friend_id);
+        const c = getAvatarColor(f.display_name);
+        const init = (f.display_name||'?')[0].toUpperCase();
+        return `<div class="friend-item ${isSel?'selected':''}" onclick="toggleFriend('${f.friend_id}', this)">
+          <div class="friend-info">
+            <div class="friend-avatar" style="background:${c}">${init}</div>
+            <div class="friend-name">${escapeHtml(f.display_name)}</div>
+          </div>
+          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>`;
+      }).join('');
+    }
+
+    function filterFriends() { renderFriendsList(); }
+
+    function toggleFriend(id, el) {
+      if (selectedFriends.has(id)) {
+        selectedFriends.delete(id);
+        el.classList.remove('selected');
+      } else {
+        selectedFriends.add(id);
+        el.classList.add('selected');
+      }
+    }
+
+    // -- TYPE --
+    function selectType(t) {
+      selectedType = t;
+      document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+      document.getElementById('type-'+t).classList.add('selected');
+    }
+
+    // -- CALENDAR --
+    function changeMonth(delta) {
+      currentMonth.setMonth(currentMonth.getMonth() + delta);
       renderCalendar();
     }
 
     function renderCalendar() {
-      const today = new Date(); today.setHours(0, 0, 0, 0);
-      const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
-      const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
-      const monthName = new Date(calendarYear, calendarMonth).toLocaleString('en-US', { month: 'long', year: 'numeric' });
-
-      let html = `<div class="calendar-header">
-      <button class="calendar-nav" onclick="navMonth(-1)">‹</button>
-      <span class="month">${monthName}</span>
-      <button class="calendar-nav" onclick="navMonth(1)">›</button>
-    </div>
-    <div class="calendar-grid">`;
-      ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].forEach(d => html += `<div class="calendar-day-label">${d}</div>`);
+      const year = currentMonth.getFullYear();
+      const month = currentMonth.getMonth();
+      const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      document.getElementById('calMonthDisplay').textContent = `${months[month]} ${year}`;
+      
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      
+      let html = '<div class="cal-day-label">Su</div><div class="cal-day-label">Mo</div><div class="cal-day-label">Tu</div><div class="cal-day-label">We</div><div class="cal-day-label">Th</div><div class="cal-day-label">Fr</div><div class="cal-day-label">Sa</div>';
+      
       for (let i = 0; i < firstDay; i++) html += `<div></div>`;
-      for (let d = 1; d <= daysInMonth; d++) {
-        const date = new Date(calendarYear, calendarMonth, d);
-        const iso = date.toISOString().split('T')[0];
-        const isPast = date < today;
-        const isToday = date.getTime() === today.getTime();
-        const isSelected = selectedDate === iso;
-        const cls = ['calendar-day', isPast ? 'disabled' : '', isToday ? 'today' : '', isSelected ? 'selected' : ''].filter(Boolean).join(' ');
-        html += `<div class="${cls}" ${isPast ? '' : `onclick="pickDate('${iso}')"`}>${d}</div>`;
+      
+      for (let day = 1; day <= daysInMonth; day++) {
+        const d = new Date(year, month, day);
+        d.setHours(0,0,0,0);
+        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        const isPast = d < today;
+        const isSelected = selectedDate === dateStr;
+        
+        html += `<div class="cal-day ${isPast ? 'disabled' : ''} ${isSelected ? 'selected' : ''}" 
+                  ${!isPast ? `onclick="selectDate('${dateStr}')"` : ''}>${day}</div>`;
       }
-      html += '</div>';
-      document.getElementById('calendar').innerHTML = html;
+      document.getElementById('calGrid').innerHTML = html;
     }
 
-    function navMonth(dir) {
-      calendarMonth += dir;
-      if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; }
-      if (calendarMonth < 0) { calendarMonth = 11; calendarYear--; }
+    function selectDate(dateStr) {
+      selectedDate = dateStr;
       renderCalendar();
+      const d = new Date(dateStr+'T00:00:00');
+      document.getElementById('selectedDateDisplay').textContent = `Selected: ${d.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'})}`;
     }
 
-    function pickDate(iso) {
-      selectedDate = iso;
-      const el = document.getElementById('selected-date');
-      el.textContent = formatDate(iso);
-      el.style.color = 'var(--text)';
-      renderCalendar();
-      setTimeout(() => closeModal('date-modal'), 200);
-    }
-
-    // --- Members ---
-    async function openMembersModal() {
-      openModal('members-modal');
-      const container = document.getElementById('friends-list-container');
-      try {
-        const data = await getFriends();
-        if (!data.friends.length) {
-          container.innerHTML = '<div class="empty-state"><span class="icon">👥</span><p>No friends yet. Add some from the home page!</p></div>';
-          return;
-        }
-        container.innerHTML = data.friends.map(f => {
-          const checked = invitedFriends.some(i => i.id === f.id) ? 'checked' : '';
-          return `<label class="friend-check">
-          <input type="checkbox" ${checked} onchange="toggleFriend('${f.id}','${escapeHtml(f.display_name)}',this.checked)">
-          ${avatarHtml(f.display_name, 32)}
-          <span>${escapeHtml(f.display_name)}</span>
-        </label>`;
-        }).join('');
-      } catch (err) {
-        container.innerHTML = '<p style="color:var(--error)">Failed to load friends</p>';
-      }
-    }
-
-    function toggleFriend(id, name, checked) {
-      if (checked) {
-        if (!invitedFriends.some(f => f.id === id)) invitedFriends.push({ id, display_name: name });
-      } else {
-        invitedFriends = invitedFriends.filter(f => f.id !== id);
-      }
-      renderChips();
-    }
-
-    function removeFriend(id) {
-      invitedFriends = invitedFriends.filter(f => f.id !== id);
-      renderChips();
-    }
-
-    function renderChips() {
-      const el = document.getElementById('invited-chips');
-      if (!invitedFriends.length) { el.innerHTML = ''; return; }
-      el.innerHTML = invitedFriends.map(f =>
-        `<span class="chip active">${escapeHtml(f.display_name)} <span class="chip-remove" onclick="removeFriend('${f.id}')">×</span></span>`
-      ).join('');
-    }
-
-    // --- Confirm ---
-    async function confirmCreate() {
-      const name = document.getElementById('outing-name').value.trim();
-      if (!name) return showToast('Please enter a group name', 'error');
-      if (!selectedType) return showToast('Please choose a group type', 'error');
-      if (!selectedDate) return showToast('Please pick a date', 'error');
-
-      const btn = document.getElementById('confirm-btn');
+    // -- SUBMIT --
+    async function submitGroup() {
+      const name = document.getElementById('groupName').value.trim();
+      const desc = document.getElementById('groupDesc').value.trim();
+      
+      if (!name) { goToStep(1); return; }
+      if (!selectedDate) { showPageToast('⚠️ Please select a date'); return; }
+      
+      const btn = document.getElementById('createBtn');
       btnLoading(btn, true);
+      
       try {
-        const data = await createOuting(name, selectedType, selectedDate, invitedFriends.map(f => f.id));
-        showToast('Group created! 🎉', 'success');
-        window.location.href = '/outing.html?id=' + data.outing_id;
+        const data = await createOuting(name, selectedType, selectedDate, Array.from(selectedFriends), desc);
+        document.getElementById('viewGroupBtn').href = `/outing.html?id=${data.outing_id}`;
+        openModal('success-modal');
       } catch (err) {
-        showToast(err.error || 'Failed to create group', 'error');
+        showPageToast('❌ ' + (err.error || 'Failed to create group'));
       } finally {
         btnLoading(btn, false);
       }
     }
 
-    initCalendar();
+    let toastTimer;
+    function showPageToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=>t.classList.remove('show'), 2800);
+    }
   </script>
 </body>
-
 </html>

@@ -15,6 +15,7 @@ $name = trim($data['name'] ?? '');
 $outingType = $data['outing_type'] ?? '';
 $scheduledDate = $data['scheduled_date'] ?? '';
 $inviteeIds = $data['invitee_ids'] ?? [];
+$description = trim($data['description'] ?? '');
 
 if (!$name) {
     jsonResponse(['error' => 'Outing name is required'], 400);
@@ -33,12 +34,13 @@ try {
 
     // Create outing
     try {
-        $stmt = $pdo->prepare('INSERT INTO outings (name, creator_id, outing_type, scheduled_date) VALUES (:name, :creator_id, :outing_type, :scheduled_date) RETURNING id');
+        $stmt = $pdo->prepare('INSERT INTO outings (name, creator_id, outing_type, scheduled_date, description) VALUES (:name, :creator_id, :outing_type, :scheduled_date, :description) RETURNING id');
         $stmt->execute([
             'name' => $name,
             'creator_id' => $userId,
             'outing_type' => $outingType,
-            'scheduled_date' => $scheduledDate
+            'scheduled_date' => $scheduledDate,
+            'description' => $description ?: null
         ]);
         $outing = $stmt->fetch();
         $outingId = $outing['id'];

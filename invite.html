@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shelah — Friend Invite</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <nav class="nav">
+    <a href="/" class="nav-logo"><span class="l1">S</span><span class="l2">h</span><span class="l3">e</span><span class="l4">l</span><span class="l5">a</span><span class="l6">h</span></a>
+    <div class="nav-right" id="nav-user"></div>
+  </nav>
+  <div class="hero-banner blue">
+    <div class="hero-inner">
+      <div class="hero-eyebrow"><span class="dot"></span> Friend Invite</div>
+      <h1 class="hero-title">You've been invited! 🎉</h1>
+      <p class="hero-sub" id="invite-msg">Processing your invite link...</p>
+    </div>
+  </div>
+  <div class="page-body" style="max-width:500px;text-align:center">
+    <div class="card" style="padding:40px 30px">
+      <div id="invite-status">
+        <div style="font-size:48px;margin-bottom:16px">⏳</div>
+        <p style="color:var(--text-muted)">Processing invite...</p>
+      </div>
+    </div>
+  </div>
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    async function onAuthReady() {
+      const code = new URLSearchParams(window.location.search).get('code');
+      const status = document.getElementById('invite-status');
+      if (!code) {
+        status.innerHTML = '<div style="font-size:48px;margin-bottom:16px">❌</div><p style="font-weight:600;font-size:16px">Invalid invite link</p><p style="color:var(--text-muted);margin-top:8px">This link appears to be broken.</p><a href="/" class="btn btn-primary" style="margin-top:20px">Go Home</a>';
+        return;
+      }
+      if (!window.currentUser) {
+        status.innerHTML = '<div style="font-size:48px;margin-bottom:16px">🔐</div><p style="font-weight:600;font-size:16px">Sign in to accept this invite</p><p style="color:var(--text-muted);margin-top:8px">You need an account to add friends.</p><a href="/index.html?login=1" class="btn btn-primary" style="margin-top:20px">Sign In</a>';
+        document.getElementById('invite-msg').textContent = 'Sign in to accept this friend invite';
+        return;
+      }
+      try {
+        const data = await sendInviteRequest(code);
+        status.innerHTML = '<div style="font-size:48px;margin-bottom:16px">🎉</div><p style="font-weight:600;font-size:16px">' + escapeHtml(data.message) + '</p><a href="/friends.html" class="btn btn-primary" style="margin-top:20px">View Friends</a>';
+        document.getElementById('invite-msg').textContent = 'Friend request sent!';
+      } catch(e) {
+        status.innerHTML = '<div style="font-size:48px;margin-bottom:16px">⚠️</div><p style="font-weight:600;font-size:16px">' + escapeHtml(e.error || 'Something went wrong') + '</p><a href="/" class="btn btn-primary" style="margin-top:20px">Go Home</a>';
+        document.getElementById('invite-msg').textContent = e.error || 'Could not process invite';
+      }
+    }
+  </script>
+</body>
+</html>

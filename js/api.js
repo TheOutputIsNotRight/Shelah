@@ -56,8 +56,8 @@ async function respondFriendRequest(friendshipId, action) {
 }
 
 // Outings
-async function createOuting(name, outingType, scheduledDate, inviteeIds) {
-  return apiFetch('/api/outings/create.php', 'POST', { name, outing_type: outingType, scheduled_date: scheduledDate, invitee_ids: inviteeIds });
+async function createOuting(name, outingType, scheduledDate, inviteeIds, description) {
+  return apiFetch('/api/outings/create.php', 'POST', { name, outing_type: outingType, scheduled_date: scheduledDate, invitee_ids: inviteeIds, description: description || null });
 }
 async function getOutings() {
   return apiFetch('/api/outings/list.php');
@@ -99,4 +99,17 @@ async function toggleVote(outingId, placeId) {
 // Config
 async function getMapsKey() {
   return apiFetch('/api/config/maps-key.php');
+}
+
+// Dashboard Stats
+async function getDashboardStats() {
+  return apiFetch('/api/stats/dashboard.php');
+}
+
+// Friend Invite Link
+async function getInviteLink() {
+  return apiFetch('/api/friends/invite-link.php');
+}
+async function sendInviteRequest(code) {
+  return apiFetch('/api/friends/invite-accept.php', 'POST', { code });
 }

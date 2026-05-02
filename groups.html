@@ -1,83 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="View all your planned groups and outings with friends.">
-  <title>Your Groups — Shelah</title>
+  <title>Shelah — My Groups</title>
   <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    .hero-banner::after{content:'🏕️';position:absolute;right:60px;top:8px;font-size:118px;opacity:.1;line-height:1;pointer-events:none;animation:floatG 6s ease-in-out infinite}
+    
+    .groups-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
+    
+    .group-card { background: white; border-radius: 20px; border: 1px solid var(--border); padding: 24px; transition: all 0.25s cubic-bezier(0.22, 0.68, 0, 1.2); text-decoration: none; color: inherit; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+    .group-card:hover { transform: translateY(-6px); box-shadow: 0 14px 34px rgba(0,0,0,0.1); border-color: rgba(0,73,183,0.3); }
+    
+    .gc-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+    .gc-icon { width: 48px; height: 48px; border-radius: 14px; background: #f0f4ff; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+    .gc-badge { padding: 4px 10px; border-radius: 50px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px; }
+    .gb-confirmed { background: rgba(16,185,129,0.15); color: #059669; }
+    .gb-pending { background: rgba(255,170,0,0.15); color: #d97706; }
+    
+    .gc-title { font-family: 'Baloo 2', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 4px; line-height: 1.2; }
+    .gc-meta { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+    
+    .gc-desc { font-size: 14px; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    
+    .gc-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    
+    .gc-avatars { display: flex; align-items: center; }
+    .gc-avatar { width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; margin-left: -8px; }
+    .gc-avatar:first-child { margin-left: 0; }
+    .gc-avatar-more { background: #e8e8f0; color: var(--text-muted); border-color: white; }
+    
+    .gc-action { font-size: 13px; font-weight: 700; color: #0049B7; background: rgba(0,73,183,0.08); padding: 6px 14px; border-radius: 50px; }
+    .group-card:hover .gc-action { background: #0049B7; color: white; }
+  </style>
 </head>
-
 <body>
+
   <nav class="nav">
-    <div class="container"><a href="/" class="nav-brand"><span>🎉</span> Shelah</a>
-      <div id="nav-user"></div>
+    <a href="/" class="nav-logo"><span class="l1">S</span><span class="l2">h</span><span class="l3">e</span><span class="l4">l</span><span class="l5">a</span><span class="l6">h</span></a>
+    <div class="nav-links">
+      <a href="/friends.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>Add Friend</a>
+      <a href="/create-outing.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Create Group</a>
+      <a href="/outings.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Outings</a>
     </div>
+    <div class="nav-right" id="nav-user"></div>
   </nav>
 
-  <main class="container" style="padding-bottom:48px">
-    <div class="page-header">
-      <h1>🗓️ Your Groups</h1>
-      <a href="/create-outing.html" class="btn btn-accent">+ Create New Group</a>
+  <div class="hero-banner blue">
+    <div class="hero-inner">
+      <div class="hero-eyebrow"><span class="dot"></span> My Groups</div>
+      <h1 class="hero-title">Your Squads 🏕️</h1>
+      <p class="hero-sub">View all the groups you're part of, check who still needs to submit preferences, or manage your invites.</p>
     </div>
+  </div>
 
-
-    <div id="outings-container">
-      <div class="skeleton" style="height:80px;margin-bottom:12px"></div>
-      <div class="skeleton" style="height:80px;margin-bottom:12px"></div>
-      <div class="skeleton" style="height:80px"></div>
+  <div class="page-body">
+    <div class="groups-grid" id="groupsGrid">
+      <div style="grid-column:1/-1;padding:40px;text-align:center"><span class="spinner" style="display:inline-block;border-color:var(--blue);border-top-color:transparent;width:30px;height:30px"></span></div>
     </div>
-  </main>
+  </div>
 
   <script src="/js/api.js"></script>
   <script src="/js/auth.js"></script>
   <script>
-    async function onAuthReady() {
+    function onAuthReady() {
       if (!requireAuth()) return;
-      await loadOutings();
+      loadGroups();
     }
 
-    async function loadOutings() {
-      const container = document.getElementById('outings-container');
+    async function loadGroups() {
+      const container = document.getElementById('groupsGrid');
       try {
         const data = await getOutings();
-
-        const renderCard = (o) => {
-          const typeCls = { open: 'pill-open', closed: 'pill-closed', restricted: 'pill-restricted' }[o.outing_type] || '';
-          const typeLabel = { open: '🌐 Open', closed: '🔒 Closed', restricted: '🔑 Restricted' }[o.outing_type] || o.outing_type;
-          const avatars = (o.members_preview || []).map(m => avatarHtml(m.display_name, 32)).join('');
-          const extra = o.member_count > 4 ? `<div class="avatar avatar-more" style="width:32px;height:32px;font-size:0.7rem">+${o.member_count - 4}</div>` : '';
-          const statusIcons = (o.invite_status === 'accepted' ? '✅' : '⏳') + ' ' + (o.requirements_submitted ? '📋' : '❓');
-          return `<div class="outing-card" onclick="window.location.href='/outing.html?id=${o.id}'">
-          <div class="outing-card-info">
-            <div class="outing-card-name">${escapeHtml(o.name)}</div>
-            <div class="outing-card-date">${formatDate(o.scheduled_date)}</div>
-          </div>
-          <div class="outing-card-right">
-            <span class="pill ${typeCls}">${typeLabel}</span>
-            <div class="avatar-stack">${avatars}${extra}</div>
-            <span style="font-size:0.85rem">${statusIcons}</span>
-          </div>
-        </div>`;
-        };
-
-        if (!data.outings.length) {
-          container.innerHTML = `<div class="empty-state">
-          <span class="icon">🎯</span>
-          <div class="title">No groups yet!</div>
-          <p>Create your first group and invite friends.</p>
-          <a href="/create-outing.html" class="btn btn-primary" style="margin-top:16px">Create Group</a>
-        </div>`;
+        const groups = data.outings || [];
+        
+        if (!groups.length) {
+          container.innerHTML = `
+            <div class="empty-state" style="grid-column:1/-1;padding:60px 20px">
+              <div class="icon" style="font-size:64px;animation:floatG 4s infinite">🏕️</div>
+              <div class="title" style="font-size:24px">No groups yet</div>
+              <p style="max-width:400px;margin:0 auto 20px">You aren't part of any groups. Create one to start planning an outing.</p>
+              <a href="/create-outing.html" class="btn btn-primary">Create Group</a>
+            </div>
+          `;
           return;
         }
 
-        container.innerHTML = data.outings.map(renderCard).join('');
-      } catch (err) {
-        container.innerHTML = '<div class="empty-state"><span class="icon">⚠️</span><p>Failed to load groups</p></div>';
+        container.innerHTML = groups.map(g => {
+          const d = new Date(g.scheduled_date + 'T00:00:00');
+          const dateStr = d.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+          
+          let badge = '';
+          if (g.all_requirements_submitted) {
+            badge = `<div class="gc-badge gb-confirmed"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Confirmed</div>`;
+          } else {
+            badge = `<div class="gc-badge gb-pending"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Pending prefs</div>`;
+          }
+
+          let typeEmoji = g.outing_type === 'closed' ? '🔒' : g.outing_type === 'open' ? '🌍' : '🛡️';
+
+          // Simulate avatars for visual richness (in real app, we'd fetch members)
+          const avatarsHtml = `<div class="gc-avatars">
+            <div class="gc-avatar" style="background:linear-gradient(135deg,#FF1D58,#F75990)">${g.name[0].toUpperCase()}</div>
+            <div class="gc-avatar" style="background:linear-gradient(135deg,#0049B7,#00DDFF)">${(g.creator_name||'?')[0].toUpperCase()}</div>
+            ${g.member_count > 2 ? `<div class="gc-avatar gc-avatar-more">+${g.member_count-2}</div>` : ''}
+          </div>`;
+
+          return `
+            <a href="/outing.html?id=${g.id}" class="group-card">
+              <div class="gc-header">
+                <div class="gc-icon">🏕️</div>
+                ${badge}
+              </div>
+              <div class="gc-title">${escapeHtml(g.name)}</div>
+              <div class="gc-meta">
+                <span>🗓️ ${dateStr}</span>
+                <span>•</span>
+                <span>${typeEmoji} ${g.outing_type}</span>
+              </div>
+              ${g.description ? `<div class="gc-desc">${escapeHtml(g.description)}</div>` : ''}
+              <div class="gc-footer">
+                ${avatarsHtml}
+                <div class="gc-action">Dashboard &rarr;</div>
+              </div>
+            </a>
+          `;
+        }).join('');
+      } catch (e) {
+        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--red)">Failed to load groups.</div>';
       }
     }
   </script>
 </body>
-
 </html>

@@ -12,6 +12,7 @@ $userId = requireAuth();
 
 $stmt = $pdo->prepare('
     SELECT o.id, o.name, o.outing_type, o.scheduled_date, o.created_at, o.creator_id,
+           o.description,
            om.invite_status, om.requirements_submitted,
            u.display_name as creator_name
     FROM outings o
