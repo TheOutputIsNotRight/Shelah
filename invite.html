@@ -58,12 +58,33 @@
         return;
       }
       try {
-        const data = await sendInviteRequest(code);
-        status.innerHTML = '<div style="font-size:48px;margin-bottom:16px">🎉</div><p style="font-weight:600;font-size:16px">' + escapeHtml(data.message) + '</p><a href="/friends.html" class="btn btn-primary" style="margin-top:20px">View Friends</a>';
-        document.getElementById('invite-msg').textContent = 'Friend request sent!';
+        const info = await getInviteInfo(code);
+        status.innerHTML = `
+          <div style="font-size:48px;margin-bottom:16px">👋</div>
+          <p style="font-weight:600;font-size:16px">Add ${escapeHtml(info.display_name)} as a friend?</p>
+          <p style="color:var(--text-muted);margin-top:8px">They will be able to invite you to outings and see your public plans.</p>
+          <div style="display:flex;gap:12px;justify-content:center;margin-top:20px">
+            <button class="btn btn-secondary" onclick="window.location.href='/'">Cancel</button>
+            <button class="btn btn-primary" id="confirm-btn">Confirm Request</button>
+          </div>
+        `;
+        document.getElementById('invite-msg').textContent = 'Confirm friend request';
+        
+        document.getElementById('confirm-btn').addEventListener('click', async () => {
+          try {
+            document.getElementById('confirm-btn').disabled = true;
+            document.getElementById('confirm-btn').textContent = 'Sending...';
+            const data = await sendInviteRequest(code);
+            status.innerHTML = '<div style="font-size:48px;margin-bottom:16px">🎉</div><p style="font-weight:600;font-size:16px">' + escapeHtml(data.message) + '</p><a href="/friends.html" class="btn btn-primary" style="margin-top:20px">View Friends</a>';
+            document.getElementById('invite-msg').textContent = 'Friend request sent!';
+          } catch(e) {
+            status.innerHTML = '<div style="font-size:48px;margin-bottom:16px">⚠️</div><p style="font-weight:600;font-size:16px">' + escapeHtml(e.error || 'Something went wrong') + '</p><a href="/" class="btn btn-primary" style="margin-top:20px">Go Home</a>';
+            document.getElementById('invite-msg').textContent = e.error || 'Could not process invite';
+          }
+        });
       } catch(e) {
-        status.innerHTML = '<div style="font-size:48px;margin-bottom:16px">⚠️</div><p style="font-weight:600;font-size:16px">' + escapeHtml(e.error || 'Something went wrong') + '</p><a href="/" class="btn btn-primary" style="margin-top:20px">Go Home</a>';
-        document.getElementById('invite-msg').textContent = e.error || 'Could not process invite';
+        status.innerHTML = '<div style="font-size:48px;margin-bottom:16px">⚠️</div><p style="font-weight:600;font-size:16px">' + escapeHtml(e.error || 'Invalid invite link') + '</p><a href="/" class="btn btn-primary" style="margin-top:20px">Go Home</a>';
+        document.getElementById('invite-msg').textContent = e.error || 'Could not load invite info';
       }
     }
   </script>

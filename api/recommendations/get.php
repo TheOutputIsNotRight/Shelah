@@ -130,7 +130,7 @@ foreach ($allPlaces as $place) {
         }
 
         // Weighted total for this member
-        $memberTotal = ($budgetScore * 0.25) + ($distanceScore * 0.25) + ($ratingScore * 0.20) + ($popularityScore * 0.15) + ($locationTypeScore * 0.15);
+        $memberTotal = ($budgetScore * 0.2) + ($distanceScore * 0.2) + ($ratingScore * 0.15) + ($popularityScore * 0.15) + ($locationTypeScore * 0.3);
         $memberScores[] = $memberTotal;
     }
 

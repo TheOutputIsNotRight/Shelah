@@ -110,6 +110,9 @@ async function getDashboardStats() {
 async function getInviteLink() {
   return apiFetch('/api/friends/invite-link.php');
 }
+async function getInviteInfo(code) {
+  return apiFetch('/api/friends/invite-info.php?code=' + code);
+}
 async function sendInviteRequest(code) {
   return apiFetch('/api/friends/invite-accept.php', 'POST', { code });
 }
