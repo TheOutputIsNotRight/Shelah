@@ -325,6 +325,7 @@
           `;
         }).join('');
       } catch (e) {
+        console.error("Error loading groups: ", e);
         container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--red)">Failed to load groups.</div>';
       }
     }
