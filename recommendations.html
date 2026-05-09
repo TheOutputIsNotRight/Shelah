@@ -136,17 +136,18 @@
     const urlParams = new URLSearchParams(window.location.search);
     const outingId = urlParams.get('outing_id');
 
-    function onAuthReady() {
+    async function onAuthReady() {
       if (!requireAuth()) return;
       if (!outingId) { window.location.href = '/outings.html'; return; }
-      loadRecommendations();
-      loadOutingDetails();
+      await loadOutingDetails();
+      await loadRecommendations();
     }
 
     async function loadOutingDetails() {
       try {
         const data = await getOuting(outingId);
         const o = data.outing;
+        window.membersCount = data.members.length;
         document.getElementById('groupNameTitle').innerHTML = `${escapeHtml(o.name)} ⛺`;
         
         const d = new Date(o.scheduled_date + 'T00:00:00');
@@ -182,9 +183,10 @@
           const rank = idx + 1;
           const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other';
           const matchColor = p.match_color || 'blue';
+          const everyoneVoted = (p.vote_count === window.membersCount && window.membersCount > 0);
           
           return `
-            <div class="rec-card">
+            <div class="rec-card" style="${everyoneVoted ? 'border: 2px solid #ffaa00; box-shadow: 0 8px 24px rgba(255,170,0,0.2); transform: scale(1.02);' : ''}">
               <div class="rank-stripe ${rankClass}"></div>
               
               <div class="rc-img-wrap">
@@ -201,6 +203,7 @@
                     <div class="rc-type">${p.location_type_icon||'📍'} ${escapeHtml(p.location_type_name||'Place')}</div>
                     <div class="rc-title">${rank}. ${escapeHtml(p.name)}</div>
                   </div>
+                  ${everyoneVoted ? `<div class="everyone-voted-label" style="background:#ffaa00;color:white;padding:4px 12px;border-radius:50px;font-size:12px;font-weight:800;display:flex;align-items:center;gap:4px">🌟 EVERYONE VOTED</div>` : ''}
                 </div>
                 
                 <div class="rc-stats">
@@ -261,6 +264,27 @@
         showPageToast('Vote cast! 👍');
       }
       countEl.textContent = `${count} vote${count!==1?'s':''}`;
+      
+      // Update UI if everyone voted
+      const cardEl = btnEl.closest('.rec-card');
+      const headerEl = cardEl.querySelector('.rc-header');
+      let everyoneVotedLabel = headerEl.querySelector('.everyone-voted-label');
+      
+      if (count === window.membersCount && window.membersCount > 0) {
+        cardEl.style.border = '2px solid #ffaa00';
+        cardEl.style.boxShadow = '0 8px 24px rgba(255,170,0,0.2)';
+        cardEl.style.transform = 'scale(1.02)';
+        if (!everyoneVotedLabel) {
+          headerEl.innerHTML += `<div class="everyone-voted-label" style="background:#ffaa00;color:white;padding:4px 12px;border-radius:50px;font-size:12px;font-weight:800;display:flex;align-items:center;gap:4px">🌟 EVERYONE VOTED</div>`;
+        }
+      } else {
+        cardEl.style.border = '';
+        cardEl.style.boxShadow = '';
+        cardEl.style.transform = '';
+        if (everyoneVotedLabel) {
+          everyoneVotedLabel.remove();
+        }
+      }
 
       try {
         await toggleVote(outingId, placeId);

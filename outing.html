@@ -261,6 +261,19 @@
 
       // Invited (pending)
       if (current_member && current_member.invite_status === 'pending') {
+        const inviteMembersHtml = members.map(m => {
+          const c = getAvatarColor(m.display_name);
+          const init = (m.display_name||'?')[0].toUpperCase();
+          return `
+            <div class="member-item" style="padding: 10px; background: white; margin-bottom: 6px; border: 1px solid var(--border);">
+              <div class="mi-avatar" style="background:${c}; width: 32px; height: 32px; font-size: 14px;">${init}</div>
+              <div class="mi-info">
+                <div class="mi-name" style="font-size: 14px;">${escapeHtml(m.display_name)}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
         vc.innerHTML = `
           <div class="hero-banner blue">
             <div class="hero-inner">
@@ -271,7 +284,27 @@
           </div>
           <div class="page-body" style="text-align:center">
             <div class="card" style="padding:40px;max-width:500px;margin:0 auto">
-              <h2 style="font-family:'Baloo 2';font-size:24px;margin-bottom:24px">Are you in?</h2>
+              <h2 style="font-family:'Baloo 2';font-size:24px;margin-bottom:8px">Are you in?</h2>
+              <p style="color:var(--text-muted);margin-bottom:24px">They are waiting for you to join!</p>
+              
+              <div style="text-align:left; background:#f7f7fb; border-radius:16px; padding:20px; margin-bottom:24px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:16px;">
+                  <div>
+                    <div style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Group Name</div>
+                    <div style="font-weight:600;">${escapeHtml(outing.name)}</div>
+                  </div>
+                  <div style="text-align:right;">
+                    <div style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Date</div>
+                    <div style="font-weight:600;">${dateStr}</div>
+                  </div>
+                </div>
+                
+                <h3 style="font-size:12px; text-transform:uppercase; color:var(--text-muted); margin-bottom:12px; font-weight:700;">Squad Members (${members.length})</h3>
+                <div style="max-height:180px; overflow-y:auto; padding-right:8px;">
+                  ${inviteMembersHtml}
+                </div>
+              </div>
+
               <button class="btn btn-accent btn-lg btn-block" id="accept-btn" onclick="handleAccept()">🤝 Accept Invite</button>
             </div>
           </div>
