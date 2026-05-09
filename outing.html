@@ -264,11 +264,12 @@
         const inviteMembersHtml = members.map(m => {
           const c = getAvatarColor(m.display_name);
           const init = (m.display_name||'?')[0].toUpperCase();
+          const isMe = window.currentUser && m.user_id === window.currentUser.id;
           return `
             <div class="member-item" style="padding: 10px; background: white; margin-bottom: 6px; border: 1px solid var(--border);">
               <div class="mi-avatar" style="background:${c}; width: 32px; height: 32px; font-size: 14px;">${init}</div>
               <div class="mi-info">
-                <div class="mi-name" style="font-size: 14px;">${escapeHtml(m.display_name)}</div>
+                <div class="mi-name" style="font-size: 14px;">${escapeHtml(m.display_name)}${isMe ? ' <span style="color:var(--text-muted);font-weight:400">(You)</span>' : ''}</div>
               </div>
             </div>
           `;
@@ -331,14 +332,22 @@
       const membersHtml = members.map(m => {
         const c = getAvatarColor(m.display_name);
         const init = (m.display_name||'?')[0].toUpperCase();
-        const status = m.requirements_submitted 
-          ? `<span class="mi-status"><span class="status-dot dot-ready"></span> Ready</span>`
-          : `<span class="mi-status"><span class="status-dot dot-pending"></span> Choosing preferences...</span>`;
+        const isMe = window.currentUser && m.user_id === window.currentUser.id;
+        
+        let status = '';
+        if (m.invite_status === 'pending') {
+          status = `<span class="mi-status"><span class="status-dot dot-pending" style="background:#64748b"></span> Invited</span>`;
+        } else {
+          status = m.requirements_submitted 
+            ? `<span class="mi-status"><span class="status-dot dot-ready"></span> Ready</span>`
+            : `<span class="mi-status"><span class="status-dot dot-pending"></span> Choosing preferences...</span>`;
+        }
+
         return `
           <div class="member-item">
             <div class="mi-avatar" style="background:${c}">${init}</div>
             <div class="mi-info">
-              <div class="mi-name">${escapeHtml(m.display_name)}</div>
+              <div class="mi-name">${escapeHtml(m.display_name)}${isMe ? ' <span style="color:var(--text-muted);font-weight:400">(You)</span>' : ''}</div>
               ${status}
             </div>
           </div>

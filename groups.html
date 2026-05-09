@@ -297,10 +297,9 @@
 
           let typeEmoji = g.outing_type === 'closed' ? '🔒' : g.outing_type === 'open' ? '🌍' : '🛡️';
 
-          // Simulate avatars for visual richness (in real app, we'd fetch members)
           const avatarsHtml = `<div class="gc-avatars">
-            <div class="gc-avatar" style="background:linear-gradient(135deg,#FF1D58,#F75990)">${g.members_preview[0].display_name[0].toUpperCase()}</div>
-            ${g.member_count > 1 ? `<div class="gc-avatar" style="background:linear-gradient(135deg,#FF1D58,#F75990)">${g.members_preview[1].display_name[0].toUpperCase()}</div>` : ''}
+            <div class="gc-avatar" style="background:${getAvatarColor(g.members_preview[0].display_name)}">${g.members_preview[0].display_name[0].toUpperCase()}</div>
+            ${g.member_count > 1 ? `<div class="gc-avatar" style="background:${getAvatarColor(g.members_preview[1].display_name)}">${g.members_preview[1].display_name[0].toUpperCase()}</div>` : ''}
             ${g.member_count > 2 ? `<div class="gc-avatar gc-avatar-more">+${g.member_count - 2}</div>` : ''}
           </div>`;
 
