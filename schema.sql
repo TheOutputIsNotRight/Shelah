@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS outing_members (
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     invite_status VARCHAR(20) DEFAULT 'pending',
     requirements_submitted BOOLEAN DEFAULT FALSE,
+    votes_submitted BOOLEAN DEFAULT FALSE,
     invited_by UUID REFERENCES users(id),
     invite_approved BOOLEAN DEFAULT NULL,
     created_at TIMESTAMP DEFAULT NOW(),

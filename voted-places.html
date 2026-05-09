@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shelah — Recommendations</title>
+  <title>Shelah — Voted Places</title>
   <link rel="stylesheet" href="/css/styles.css">
   <style>
     .hero-banner::after{content:'🌟';position:absolute;right:60px;top:12px;font-size:100px;opacity:.15;line-height:1;pointer-events:none;animation:spinStar 12s linear infinite}
@@ -104,9 +104,9 @@
   <!-- HERO -->
   <div class="hero-banner blue">
     <div class="hero-inner">
-      <div class="hero-eyebrow"><span class="dot"></span> Shelah Results</div>
+      <div class="hero-eyebrow"><span class="dot"></span> Final Selection</div>
       <h1 class="hero-title" id="groupNameTitle">Loading...</h1>
-      <p class="hero-sub">Here are the best matches for your group, calculated by combining everyone's preferences for budget, distance, ratings, and location types.</p>
+      <p class="hero-sub">Here are the places that everyone in the group has agreed on.</p>
       
       <div class="hero-meta-row" id="heroMeta">
         <div class="hm-pill"><span class="spinner" style="width:14px;height:14px"></span> Loading details</div>
@@ -116,8 +116,7 @@
 
   <div class="page-body">
     <div class="results-toolbar">
-      <div class="results-count">Recommended Spots <span id="recCount">0</span></div>
-      <button class="btn btn-primary" id="confirm-voting-btn" onclick="handleConfirmVoting()" style="background:#ffaa00;border-color:#ffaa00;color:white">Confirm Voting ✅</button>
+      <div class="results-count">Voted Spots <span id="recCount">0</span></div>
     </div>
 
     <div class="rec-list" id="recList">
@@ -164,7 +163,8 @@
     async function loadRecommendations() {
       try {
         const data = await getRecommendations(outingId);
-        const places = data.places || [];
+        // Filter to only places where everyone voted
+        const places = (data.places || []).filter(p => p.vote_count === window.membersCount && window.membersCount > 0);
         
         document.getElementById('recCount').textContent = places.length;
         
@@ -172,8 +172,8 @@
           document.getElementById('recList').innerHTML = `
             <div class="empty-state">
               <div class="icon">🤷</div>
-              <div class="title">No matches found</div>
-              <p>We couldn't find any places that meet the group's requirements. Try adjusting your preferences.</p>
+              <div class="title">No Consensus Reached</div>
+              <p>There are no places that everyone in the group voted for.</p>
               <br><a href="/outing.html?id=${outingId}" class="btn btn-outline">Back to Group</a>
             </div>
           `;
@@ -220,11 +220,6 @@
                     </div>
                     <span style="font-size:12px;font-weight:700;color:var(--text-muted)">Fit</span>
                   </div>
-                  
-                  <div class="vote-action">
-                    <span class="vote-count" id="count-${p.id}">${p.vote_count} vote${p.vote_count!==1?'s':''}</span>
-                    <button class="vote-btn ${p.user_voted?'voted':''}" id="btn-${p.id}" onclick="handleVote('${p.id}', this)">👍</button>
-                  </div>
                 </div>
               </div>
             </div>
@@ -247,75 +242,6 @@
             <br><a href="/outing.html?id=${outingId}" class="btn btn-outline">Back to Group</a>
           </div>
         `;
-      }
-    }
-
-    async function handleVote(placeId, btnEl) {
-      // Optimistic update
-      const isVoted = btnEl.classList.contains('voted');
-      const countEl = document.getElementById('count-'+placeId);
-      let count = parseInt(countEl.textContent);
-      
-      if (isVoted) {
-        btnEl.classList.remove('voted');
-        count--;
-      } else {
-        btnEl.classList.add('voted');
-        count++;
-        showPageToast('Vote cast! 👍');
-      }
-      countEl.textContent = `${count} vote${count!==1?'s':''}`;
-      
-      // Update UI if everyone voted
-      const cardEl = btnEl.closest('.rec-card');
-      const headerEl = cardEl.querySelector('.rc-header');
-      let everyoneVotedLabel = headerEl.querySelector('.everyone-voted-label');
-      
-      if (count === window.membersCount && window.membersCount > 0) {
-        cardEl.style.border = '2px solid #ffaa00';
-        cardEl.style.boxShadow = '0 8px 24px rgba(255,170,0,0.2)';
-        cardEl.style.transform = 'scale(1.02)';
-        if (!everyoneVotedLabel) {
-          headerEl.innerHTML += `<div class="everyone-voted-label" style="background:#ffaa00;color:white;padding:4px 12px;border-radius:50px;font-size:12px;font-weight:800;display:flex;align-items:center;gap:4px">🌟 EVERYONE VOTED</div>`;
-        }
-      } else {
-        cardEl.style.border = '';
-        cardEl.style.boxShadow = '';
-        cardEl.style.transform = '';
-        if (everyoneVotedLabel) {
-          everyoneVotedLabel.remove();
-        }
-      }
-
-      try {
-        await toggleVote(outingId, placeId);
-      } catch (err) {
-        // Revert on error
-        if (isVoted) {
-          btnEl.classList.add('voted');
-          countEl.textContent = `${count+1} vote${count+1!==1?'s':''}`;
-        } else {
-          btnEl.classList.remove('voted');
-          countEl.textContent = `${count-1} vote${count-1!==1?'s':''}`;
-        }
-        showPageToast('❌ Failed to save vote');
-      }
-    }
-
-    async function handleConfirmVoting() {
-      const btn = document.getElementById('confirm-voting-btn');
-      btn.disabled = true;
-      btn.textContent = 'Confirming...';
-      try {
-        await confirmVotes(outingId);
-        showPageToast('Votes confirmed! ✅');
-        setTimeout(() => {
-          window.location.href = '/outing.html?id=' + outingId;
-        }, 1000);
-      } catch (err) {
-        showPageToast('❌ ' + (err.error || 'Failed to confirm votes'));
-        btn.disabled = false;
-        btn.textContent = 'Confirm Voting ✅';
       }
     }
 

@@ -40,9 +40,14 @@ if ($outing['outing_type'] === 'open') {
     }
 }
 
+// Temporary migration
+try {
+    $pdo->exec('ALTER TABLE outing_members ADD COLUMN IF NOT EXISTS votes_submitted BOOLEAN DEFAULT FALSE;');
+} catch(Exception $e) {}
+
 // Get members
 $stmt = $pdo->prepare('
-    SELECT om.id as member_id, om.user_id, om.invite_status, om.requirements_submitted,
+    SELECT om.id as member_id, om.user_id, om.invite_status, om.requirements_submitted, om.votes_submitted,
            om.invite_approved, om.invited_by,
            u.display_name, u.email
     FROM outing_members om

@@ -95,6 +95,9 @@ async function getRecommendations(outingId) {
 async function toggleVote(outingId, placeId) {
   return apiFetch('/api/votes/toggle.php', 'POST', { outing_id: outingId, place_id: placeId });
 }
+async function confirmVotes(outingId) {
+  return apiFetch('/api/votes/confirm.php', 'POST', { outing_id: outingId });
+}
 
 // Config
 async function getMapsKey() {
