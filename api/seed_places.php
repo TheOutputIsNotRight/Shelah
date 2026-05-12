@@ -71,9 +71,13 @@ $types = [
     ['Live Music Venue', '🎵'],
 ];
 
-$stmtType = $pdo->prepare('INSERT INTO location_types (name, icon) VALUES (:name, :icon) ON CONFLICT DO NOTHING');
+$stmtTypeCheck = $pdo->prepare('SELECT id FROM location_types WHERE name = :name');
+$stmtTypeInsert = $pdo->prepare('INSERT INTO location_types (name, icon) VALUES (:name, :icon)');
 foreach ($types as $t) {
-    $stmtType->execute(['name' => $t[0], 'icon' => $t[1]]);
+    $stmtTypeCheck->execute(['name' => $t[0]]);
+    if (!$stmtTypeCheck->fetch()) {
+        $stmtTypeInsert->execute(['name' => $t[0], 'icon' => $t[1]]);
+    }
 }
 
 $typeMap = [];
