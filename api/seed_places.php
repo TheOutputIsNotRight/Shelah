@@ -190,7 +190,6 @@ foreach ($places as $p) {
         'lng' => $p['lng'],
         'rating' => $p['rating'],
         'popularity' => $p['pop'],
-        'budget' => $p['budget'],
         'price' => $p['price'],
         'thumb' => $p['thumb']
     ];
