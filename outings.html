@@ -201,7 +201,7 @@
         document.getElementById('placesGrid').innerHTML = places.map(p => `
           <a href="/recommendations.html?outing_id=${id}" class="place-card">
             <div class="pc-img">
-              ${p.image_url ? `<img src="${escapeHtml(p.image_url)}">` : '🏪'}
+              ${p.thumbnail_url ? `<img src="${escapeHtml(p.thumbnail_url)}">` : '🏪'}
               <div class="match-badge match-${p.match_color}">🎯 ${p.match_percentage}% Match</div>
             </div>
             <div class="pc-body">
@@ -209,6 +209,7 @@
               <div class="pc-meta">
                 <span>📍 ${p.distance_km ? p.distance_km+' km' : escapeHtml(p.city||'')}</span>
                 <span>${p.location_type_icon||'🏢'} ${escapeHtml(p.location_type_name||'Place')}</span>
+                ${p.popularity ? `<span>🔥 ${p.popularity.charAt(0).toUpperCase() + p.popularity.slice(1)}</span>` : ''}
               </div>
               <div class="pc-footer">
                 <div class="vote-stat ${p.user_voted ? 'voted' : ''}">

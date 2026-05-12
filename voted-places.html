@@ -191,7 +191,7 @@
               <div class="rank-stripe ${rankClass}"></div>
               
               <div class="rc-img-wrap">
-                ${p.image_url ? `<img src="${escapeHtml(p.image_url)}">` : '🏪'}
+                ${p.thumbnail_url ? `<img src="${escapeHtml(p.thumbnail_url)}">` : '🏪'}
                 <div class="rc-match-pill">
                   <div class="rc-match-dot dot-${matchColor}"></div>
                   ${p.match_percentage}% Match
@@ -211,6 +211,7 @@
                   <div class="rc-stat">📍 ${p.distance_km ? p.distance_km+' km away' : escapeHtml(p.city||'')}</div>
                   <div class="rc-stat">💰 ${p.price_per_person_egp ? p.price_per_person_egp + ' EGP' : 'Price varies'}</div>
                   <div class="rc-stat">⭐ ${parseFloat(p.rating).toFixed(1)}</div>
+                  ${p.popularity ? `<div class="rc-stat">🔥 ${p.popularity.charAt(0).toUpperCase() + p.popularity.slice(1)}</div>` : ''}
                 </div>
                 
                 <div class="rc-footer">

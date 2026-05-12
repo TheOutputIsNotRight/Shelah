@@ -100,10 +100,8 @@ foreach ($allPlaces as $place) {
             $maxDist = (int)($req['max_distance_km'] ?: 50);
             if ($distance <= $maxDist) {
                 $distanceScore = 100;
-            } elseif ($distance <= $maxDist * 2) {
-                $distanceScore = 100 - (($distance - $maxDist) / $maxDist * 100);
             } else {
-                $distanceScore = 0;
+                $distanceScore = 100 - (($distance - $maxDist) / $maxDist * 100);
             }
         }
 
@@ -126,7 +124,7 @@ foreach ($allPlaces as $place) {
         // Location type score
         $userTypes = $requirementLocationTypes[$req['user_id']] ?? [];
         if (!empty($userTypes)) {
-            $locationTypeScore = in_array($place['location_type_id'], $userTypes) ? 100 : -30;
+            $locationTypeScore = in_array($place['location_type_id'], $userTypes) ? 100 : -100;
         }
 
         // Weighted total for this member
@@ -135,7 +133,7 @@ foreach ($allPlaces as $place) {
     }
 
     // Group match = average of all member scores
-    $matchPercentage = count($memberScores) > 0 ? round(array_sum($memberScores) / count($memberScores)) : 0;
+    $matchPercentage = max(0, min(100, count($memberScores) > 0 ? round(array_sum($memberScores) / count($memberScores)) : 0));
 
     // Exclude places below 40%
     if ($matchPercentage < 40) continue;
