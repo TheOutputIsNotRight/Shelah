@@ -166,13 +166,12 @@ $checkStmt = $pdo->prepare('SELECT id FROM places WHERE name = :name');
 $updateStmt = $pdo->prepare('
     UPDATE places SET 
         location_type_id = :type_id, address = :address, latitude = :lat, longitude = :lng, 
-        rating = :rating, popularity = :popularity, budget_tier = :budget, 
-        price_per_person_egp = :price, thumbnail_url = :thumb
+        rating = :rating, popularity = :popularity, price_per_person_egp = :price, thumbnail_url = :thumb
     WHERE id = :id
 ');
 $insertStmt = $pdo->prepare('
-    INSERT INTO places (name, location_type_id, address, latitude, longitude, rating, popularity, budget_tier, price_per_person_egp, thumbnail_url)
-    VALUES (:name, :type_id, :address, :lat, :lng, :rating, :popularity, :budget, :price, :thumb)
+    INSERT INTO places (name, location_type_id, address, latitude, longitude, rating, popularity, price_per_person_egp, thumbnail_url)
+    VALUES (:name, :type_id, :address, :lat, :lng, :rating, :popularity, :price, :thumb)
 ');
 
 $inserted = 0;
