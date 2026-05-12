@@ -34,8 +34,6 @@ try {
 }
 
 try {
-    $pdo->beginTransaction();
-
     echo "\n--- Fixing duplicate location types ---\n";
     // 1. Get all unique names
     $names = $pdo->query('SELECT DISTINCT name FROM location_types')->fetchAll(PDO::FETCH_COLUMN);
@@ -124,13 +122,11 @@ try {
     
     echo "✅ Removed {$placesRemoved} duplicate places.\n";
     
-    $pdo->commit();
     echo "\n\n=============================\n";
     echo "✅ FIX COMPLETE!\n";
     echo "=============================\n";
 
 } catch (Exception $e) {
-    $pdo->rollBack();
     die("\n❌ ERROR: " . $e->getMessage() . "\n");
 }
 echo '</pre>';
