@@ -79,7 +79,7 @@ foreach ($allPlaces as $place) {
         $popularityScore = 100;
         $locationTypeScore = 100;
 
-        // Budget score (25%) - 100 if within max budget, degrades based on overage
+        // Budget score
         if (isset($req['max_price_egp']) && $req['max_price_egp'] > 0 && isset($place['price_per_person_egp'])) {
             $maxPrice = (int)$req['max_price_egp'];
             $placePrice = (int)$place['price_per_person_egp'];
@@ -87,11 +87,11 @@ foreach ($allPlaces as $place) {
                 $budgetScore = 100;
             } else {
                 $over = ($placePrice - $maxPrice) / $maxPrice;
-                $budgetScore = max(0, 100 - ($over * 100)); // 50% over = 50 score
+                $budgetScore = 100 - ($over * 100);
             }
         }
 
-        // Distance score (25%) - 100 if within max, linear falloff to 2x max
+        // Distance score
         if ($req['home_latitude'] && $req['home_longitude'] && $place['latitude'] && $place['longitude']) {
             $distance = haversineDistance(
                 (float)$req['home_latitude'], (float)$req['home_longitude'],
@@ -101,13 +101,13 @@ foreach ($allPlaces as $place) {
             if ($distance <= $maxDist) {
                 $distanceScore = 100;
             } elseif ($distance <= $maxDist * 2) {
-                $distanceScore = max(0, 100 - (($distance - $maxDist) / $maxDist * 100));
+                $distanceScore = 100 - (($distance - $maxDist) / $maxDist * 100);
             } else {
                 $distanceScore = 0;
             }
         }
 
-        // Rating score (20%) - 100 if meets min, linear degrade below
+        // Rating score
         if ($req['min_rating'] && $place['rating']) {
             $minR = (float)$req['min_rating'];
             $placeR = (float)$place['rating'];
@@ -118,15 +118,15 @@ foreach ($allPlaces as $place) {
             }
         }
 
-        // Popularity score (15%) - 100 if matches or 'any'
+        // Popularity score
         if ($req['popularity_preference'] && $req['popularity_preference'] !== 'any') {
-            $popularityScore = ($place['popularity'] === $req['popularity_preference']) ? 100 : 30;
+            $popularityScore = ($place['popularity'] === $req['popularity_preference']) ? 100 : -50;
         }
 
-        // Location type score (15%) - 100 if in preferred types or no preference
+        // Location type score
         $userTypes = $requirementLocationTypes[$req['user_id']] ?? [];
         if (!empty($userTypes)) {
-            $locationTypeScore = in_array($place['location_type_id'], $userTypes) ? 100 : 20;
+            $locationTypeScore = in_array($place['location_type_id'], $userTypes) ? 100 : -30;
         }
 
         // Weighted total for this member
