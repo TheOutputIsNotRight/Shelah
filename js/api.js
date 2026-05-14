@@ -2,29 +2,49 @@
 // Shelah — API Fetch Wrapper
 // ============================================
 
-async function apiFetch(endpoint, method = 'GET', body = null) {
-  const opts = {
-    method,
-    credentials: 'include',
-    headers: {}
-  };
-  if (body && method !== 'GET') {
-    opts.headers['Content-Type'] = 'application/json';
-    opts.body = JSON.stringify(body);
-  }
-  const res = await fetch(endpoint, opts);
-  const data = await res.json();
-  if (!res.ok) {
-    if (res.status === 401) {
-      window.currentUser = null;
-      if (!window.location.pathname.includes('index.html') && window.location.pathname !== '/') {
-        window.location.href = '/index.html?login=1';
+function apiFetch(endpoint, method = 'GET', body = null) {
+  return new Promise(function (resolve, reject) {
+    var xhr = new XMLHttpRequest();
+    xhr.open(method, endpoint, true);
+    xhr.withCredentials = true;
+
+    if (body && method !== 'GET') {
+      xhr.setRequestHeader('Content-Type', 'application/json');
+    }
+
+    xhr.onload = function () {
+      var data;
+      try {
+        data = JSON.parse(xhr.responseText);
+      } catch (e) {
+        reject({ status: xhr.status, error: 'Invalid JSON response' });
         return;
       }
-    }
-    throw { status: res.status, ...data };
-  }
-  return data;
+
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(data);
+      } else {
+        if (xhr.status === 401) {
+          window.currentUser = null;
+          if (!window.location.pathname.includes('index.html') && window.location.pathname !== '/') {
+            window.location.href = '/index.html?login=1';
+            return;
+          }
+        }
+        reject(Object.assign({ status: xhr.status }, data));
+      }
+    };
+
+    xhr.onerror = function () {
+      reject({ status: 0, error: 'Network error' });
+    };
+
+    xhr.ontimeout = function () {
+      reject({ status: 0, error: 'Request timed out' });
+    };
+
+    xhr.send(body && method !== 'GET' ? JSON.stringify(body) : null);
+  });
 }
 
 // Auth
