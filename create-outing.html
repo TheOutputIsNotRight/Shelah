@@ -4,7 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Create a new outing group on Shelah. Name your squad, invite friends, choose a group type, and set a date for your next hangout.">
+  <meta name="description"
+    content="Create a new outing group on Shelah. Name your squad, invite friends, choose a group type, and set a date for your next hangout.">
   <title>Shelah — Create Group</title>
   <link rel="stylesheet" href="/css/styles.css">
   <style>
@@ -652,7 +653,7 @@
               </svg></div>
             <div class="type-icon">🔒</div>
             <div class="type-title">Closed</div>
-            <div class="type-desc">Only members can see recommendations and vote.</div>
+            <div class="type-desc">Only initially invited members can join.</div>
           </div>
           <div class="type-card" onclick="selectType('open')" id="type-open">
             <div class="type-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -661,7 +662,7 @@
               </svg></div>
             <div class="type-icon">🌍</div>
             <div class="type-title">Open</div>
-            <div class="type-desc">Anyone can see and vote on recommendations.</div>
+            <div class="type-desc">Anyone with the link can join.</div>
           </div>
           <div class="type-card" onclick="selectType('restricted')" id="type-restricted">
             <div class="type-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -670,7 +671,7 @@
               </svg></div>
             <div class="type-icon">🛡️</div>
             <div class="type-title">Restricted</div>
-            <div class="type-desc">Anyone can see, but only members can vote.</div>
+            <div class="type-desc">Anyone in the group can invite members after approval of other members.</div>
           </div>
         </div>
         <div class="btn-group">
